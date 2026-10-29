@@ -1,0 +1,876 @@
+export default {
+  id: "docker-what-is-docker-and-why-use-it",
+  title: {
+    en: "What is Docker & Why Use Containers? (Containerization Explained)",
+    hi: "Docker Kya Hai & Containers Kyun Use Karein? (Complete Guide)",
+  },
+  difficulty: "Beginner",
+  readTime: 15,
+  sections: [
+    {
+      type: "concept",
+      heading: {
+        en: "1. The 'It Works On My Machine' Problem & Container Isolation",
+        hi: "1. 'Mere Laptop Pe Chal Raha Tha' Problem Aur Containerization",
+      },
+      body: {
+        en: `Every software engineer encounters the painful environment disparity issue:
+> *"It ran flawlessly on my local MacBook with Node v20, but crashed immediately when deployed to the Ubuntu production server!"*
+
+### Why Software Breaks Across Environments:
+- **Operating System Discrepancies**: Different Linux kernel versions, file path separators (\`/\` vs \`\\\`), and case sensitivity rules.
+- **Runtime Version Drift**: Developer has Node v20.10; Staging server has Node v18.2; Production has Node v16.
+- **Native Binary Mismatches**: C++ packages like \`bcrypt\` or \`sharp\` compiled for Apple Silicon (ARM64) fail on Intel/AMD (x86_64) cloud instances.
+- **Missing System Dependencies**: Missing global packages like \`openssl\`, \`python3\`, or \`graphicsmagick\`.
+
+---
+
+### What is Docker?
+**Docker** is an open-source platform that automates the deployment of applications inside lightweight, portable, self-sufficient software containers.
+- **Container Isolation**: A Docker container packages your code, Node runtime, dependencies, system tools, and environment variables into a single standardized unit.
+- **Immutable Artifacts**: Once a Docker image is built and tested, it runs **identically** on a MacBook, Windows PC, Linux server, AWS ECS, or Kubernetes cluster!`,
+        hi: `Har developer ne life mein ye zaroor dekha hai:
+> *"Bhai mere laptop par bilkul sahi chal raha tha, production server par jate hi crash ho gaya!"*
+
+### Production Kyun Phat-ta Hai?
+- **OS Discrepancy**: Developer Mac par hota hai, server Ubuntu Linux par. File paths aur permissions alag hote hain.
+- **Node.js Version Mismatch**: Aapke paas Node v20 hai, server par purana Node v18 hai jisme latest JS syntax support nahi hota.
+- **Architecture Difference**: Apple Silicon (M1/M2/M3 ARM64) par compile hua \`bcrypt\` Linux x86 par nahi chalta.
+- **Missing Global Libraries**: Server par required system libraries install nahi hoti.
+
+---
+
+### Docker Kya Hai?
+**Docker** ek aisa containerization platform hai jo aapke application code, Node.js runtime, dependencies, aur configuration ko ek lightweight, isolated **Container** mein band kar deta hai:
+- **Standardized Container**: Ek baar Docker image ban gayi, toh wo duniya ke kisi bhi computer ya cloud server par **100% same** behave karegi.
+- **Zero Drift**: "Works on my machine" ka bahana hamesha ke liye khatam ho jata hai!`,
+      },
+    },
+    {
+      type: "analogy",
+      heading: {
+        en: "2. Real-World Indian Analogy: Shipping Containers at Mumbai Nhava Sheva (JNPT) Port",
+        hi: "2. Real-World Desi Analogy: Mumbai Nhava Sheva Port Ke Cargo Containers",
+      },
+      body: {
+        en: `### 🚢 The Intermodal Shipping Container Revolution
+
+Before 1956, cargo shipping was chaotic ("Break Bulk Shipping"):
+- Workers spent days manually loading 1,000 sacks of spices, 200 boxes of glassware, and 50 barrels of oil individually onto ships.
+- Goods got crushed, stolen, spoiled by sea spray, or rejected because the ship's hold had odd dimensions.
+
+### The Invention of the Standardized ISO Container:
+In 1956, Malcolm McLean invented the standard **8x8x20 foot steel shipping container**:
+1. It does not matter what is inside: electronics, basmati rice, or luxury cars.
+2. The cranes at **Mumbai JNPT Port**, the flatbed cargo trucks in Delhi, and the cargo trains in Chennai all use the **exact same standardized twist-locks** and dimensions!
+
+### Docker is the Shipping Container for Software:
+- Your application (Express API, React frontend, MongoDB) is the cargo inside.
+- Docker provides the standardized steel container.
+- Any cloud server (AWS, GCP, DigitalOcean, local laptop) is the crane that loads and runs it effortlessly without caring what programming language is inside!`,
+        hi: `### 🚢 Mumbai JNPT Port Ke Cargo Shipping Containers Ka Example
+
+1950 se pehle jab jahazo par samaan load hota tha:
+- Kuli haath se 500 bori masale, 100 kaanch ke bartan aur 50 tel ke peepe jahaz mein load karte the.
+- Raste mein samaan toot jata tha, baarish se kharab ho jata tha aur har jahaz ka shape alag hone se load karna mushkil tha.
+
+### Standardized Steel Container Ka Aavishkar:
+Standard **Steel Shipping Container** ne duniya badal di:
+1. Container ke andar chahe Basmati Chawal ho, iPhone ho ya cement—bahar se har container ka size aur lock mechanism bilkul same hota hai.
+2. **Mumbai Nhava Sheva Port** ki crane, truck aur train sab usi standard box ko bina khole utha kar le jate hain.
+
+### Docker Software Ka Shipping Container Hai:
+- Aapka code (React, Node.js, Express) container ke andar ka samaan hai.
+- Docker use ek standardized steel container bana deta hai.
+- Cloud server (AWS, Azure, DigitalOcean) wahi crane hai jo bina dekhe ki andar Python hai ya JavaScript, container ko 1 second mein run kar deta hai!`,
+      },
+    },
+    {
+      type: "concept",
+      heading: {
+        en: "3. Virtual Machines (VMs) vs Docker Containers: The Architecture",
+        hi: "3. Virtual Machines vs Docker Containers: Deep Architectural Comparison",
+      },
+      body: {
+        en: `Understanding the architectural boundary between VMs and Containers is the #1 DevOps interview question:
+
+\`\`\`
+       [ VIRTUAL MACHINES ]                     [ DOCKER CONTAINERS ]
+┌─────────────────────────────────┐       ┌─────────────────────────────────┐
+│ App 1 (Node)   │  App 2 (Mongo) │       │ App 1 (Node)   │  App 2 (Mongo) │
+├────────────────┼────────────────┤       ├────────────────┼────────────────┤
+│ Guest OS       │  Guest OS      │       │ Bins / Libs    │  Bins / Libs   │
+│ (Ubuntu 2GB)   │  (Alpine 1GB)  │       ├────────────────┴────────────────┤
+├────────────────┴────────────────┤       │     Docker Container Engine     │
+│       Hypervisor (Type 1/2)     │       ├─────────────────────────────────┤
+├─────────────────────────────────┤       │     Host Operating System       │
+│     Host Operating System       │       │        (Shared Linux Kernel)    │
+├─────────────────────────────────┤       ├─────────────────────────────────┤
+│        Physical Server          │       │        Physical Server          │
+└─────────────────────────────────┘       └─────────────────────────────────┘
+\`\`\`
+
+### Key Architectural Differences:
+1. **Shared OS Kernel**:
+   - **VMs**: Every virtual machine runs its own full **Guest Operating System** (Ubuntu, CentOS) with separate kernel drivers, consuming 2GB-10GB of disk space and requiring 1-3 minutes to boot.
+   - **Containers**: Containers share the **Host Operating System's Linux Kernel**! They isolate processes using Linux **Namespaces** (PID, NET, MNT) and restrict hardware resources using **Control Groups (cgroups)**.
+2. **Startup Speed**:
+   - VM boot time: **30 to 180 seconds**
+   - Container startup time: **Under 1 second (sub-500ms)**
+3. **Resource Overhead**:
+   - Containers run as native OS processes, incurring **near-zero CPU/RAM virtualization overhead**!`,
+        hi: `VMs aur Containers ke beech ka difference har senior developer interview mein pucha jata hai:
+
+### Mukhya Differences:
+1. **Shared Linux Kernel**:
+   - **Virtual Machines**: Har VM ke andar apna alag poora Operating System (Ubuntu, Windows) chalta hai. Iski wajah se VM 2GB-5GB RAM aur hard disk le leti hai aur start hone mein 2 minute lagati hai.
+   - **Docker Containers**: Containers host computer ka **Linux Kernel share karte hain**! Linux ke **Namespaces** (PID, Network) aur **cgroups** ke zariye processes ko isolate kiya jata hai.
+2. **Boot Time**:
+   - VM start hone mein 1 se 3 minute lagte hain.
+   - Docker container **1 second se kam** mein instantly start ho jata hai!
+3. **Resource Efficiency**:
+   - Container direct host CPU par native process ki tarah chalta hai, isme koi heavy hypervisor overhead nahi hota.`,
+      },
+      code: {
+        language: "dockerfile",
+        filename: "Dockerfile",
+        snippet: `# Production Multi-Stage Dockerfile for Node.js Express API
+# Stage 1: Build & Dependencies
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Stage 2: Minimal Distroless / Production Runner
+FROM node:20-alpine AS runner
+WORKDIR /app
+# Run as non-root user for enterprise security
+USER node
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node . .
+
+EXPOSE 5000
+ENV NODE_ENV=production
+CMD ["node", "src/server.js"]`,
+      },
+    },
+    {
+      type: "concept",
+      heading: {
+        en: "4. The 5 Core Building Blocks of Docker",
+        hi: "4. Docker Ke 5 Mukhya Pillars (Core Components)",
+      },
+      body: {
+        en: `To master Docker, you must understand these 5 foundational concepts:
+
+1. **Dockerfile**: A plain-text recipe of instructions (\`FROM\`, \`WORKDIR\`, \`COPY\`, \`RUN\`, \`CMD\`) describing how to assemble an image.
+2. **Docker Image**: An immutable, read-only template built from ordered filesystem layers (UnionFS). Think of an image as a compiled blueprint class.
+3. **Docker Container**: A runnable, live instance of an image with an ephemeral writable top layer. If an image is a class, a container is an instantiated object!
+4. **Docker Registry (Docker Hub / AWS ECR)**: A cloud repository where pre-built images (like \`node:20\`, \`mongo:7.0\`, \`redis:7\`) are stored and downloaded via \`docker pull\`.
+5. **Docker Compose**: A declarative YAML tool (\`docker-compose.yml\`) to orchestrate multi-container full-stack applications (React + Express + MongoDB + Redis) with a single command: \`docker compose up\`.`,
+        hi: `Docker ke ye 5 core concepts clear hone zaroori hain:
+
+1. **Dockerfile**: Ek simple text file jisme step-by-step instructions likhe hote hain ki app image kaise banegi (\`FROM node:20\`, \`COPY\`, \`RUN npm install\`).
+2. **Docker Image**: Read-only immutable template jo Dockerfile se banta hai. Jaise OOP mein Class hoti hai.
+3. **Docker Container**: Image ka live running instance! Jaise Class ka Object hota hai. Container start, stop aur delete ho sakta hai.
+4. **Docker Registry (Docker Hub)**: Jaise code ke liye GitHub hai, waise images store karne ke liye Docker Hub hai (\`docker pull mongo\`).
+5. **Docker Compose**: Ek single \`docker-compose.yml\` file se poora MERN stack (React, Express, Mongo, Redis) ek command (\`docker compose up\`) se chalane ka tool.`,
+      },
+    },
+    {
+      type: "pitfalls",
+      heading: {
+        en: "5. Production Pitfalls & Security Best Practices",
+        hi: "5. Production Galtiyan Aur Security Best Practices",
+      },
+      body: {
+        en: `### ❌ Critical Mistakes in Production Docker:
+1. **Running Containers as Root**:
+   By default, Docker runs processes as \`root\`. If an attacker exploits an Express API vulnerability, they gain root privileges on the container! Always add \`USER node\` before runtime.
+2. **Missing .dockerignore File**:
+   Forgetting a \`.dockerignore\` copies the local \`node_modules\` folder, \`.env\`, and \`.git\` folders into the image, bloating image sizes to 1.5GB and leaking production secrets!
+3. **Using Huge Base Images**:
+   Using the default \`FROM node:20\` downloads Ubuntu (~1.1GB). Always use lightweight Alpine Linux: \`FROM node:20-alpine\` (~130MB)!
+4. **Ignoring Volume Mounts for MongoDB**:
+   Containers are ephemeral. If you run MongoDB in a container without a mounted volume (\`-v mongo-data:/data/db\`), all database data is permanently lost when the container stops!`,
+        hi: `### ❌ Yeh Galtiyan Kabhi Na Karein:
+1. **Root user par container chalana**:
+   Hamesha Dockerfile mein \`USER node\` use karein taaki hacker ko container ka root access na mile.
+2. **.dockerignore na lagana**:
+   Agar \`.dockerignore\` nahi banaya, toh aapke local \`node_modules\` aur \`.env\` secrets image ke andar chale jayenge aur image 1.5GB ki ho jayegi!
+3. **Badi base image lena**:
+   \`FROM node:20\` lagane se poora Ubuntu download hota hai (~1GB). Hamesha lightweight \`FROM node:20-alpine\` (~130MB) use karein.
+4. **MongoDB data volume na lagana**:
+   Container temporary hota hai. Agar MongoDB container bina persistent volume (\`-v\`) ke restart hua, toh aapka saara database data gayab ho jayega!`,
+      },
+    },
+    {
+      type: "summary",
+      heading: {
+        en: "6. Essential Docker CLI Cheat Sheet",
+        hi: "6. Essential Docker Commands Quick Reference",
+      },
+      body: {
+        en: `### 📌 Top Docker Commands for MERN Engineers:
+- \`docker build -t my-mern-api .\` : Build an image from Dockerfile
+- \`docker run -d -p 5000:5000 --name api my-mern-api\` : Run container in detached mode on port 5000
+- \`docker ps\` : List all running containers
+- \`docker logs -f <container_id>\` : Follow live container console logs
+- \`docker exec -it <container_id> sh\` : Open an interactive terminal shell inside a running container
+- \`docker compose up -d\` : Launch entire multi-container MERN stack in background
+- \`docker compose down -v\` : Stop containers and clean up networks`,
+        hi: `### 📌 Zaroori Commands:
+- \`docker build -t my-app .\` : Dockerfile se naya image banayein
+- \`docker run -d -p 5000:5000 my-app\` : Background mein port forward karke container chalayein
+- \`docker ps\` : Currently running containers ki list dekhein
+- \`docker logs -f <id>\` : Container ke live logs inspect karein
+- \`docker exec -it <id> sh\` : Container ke andar Linux terminal open karein
+- \`docker compose up -d\` : Poora MERN stack ek sath launch karein`,
+      },
+    },
+  ],
+  quiz: [
+    {
+      q: {
+        en: "What fundamental operating system technology allows Docker containers to share the host kernel while maintaining isolated process boundaries?",
+        hi: "Kaun si core Linux technology Docker containers ko host kernel share karne aur process isolation maintain karne ki anumati deti hai?",
+      },
+      question: {
+        en: "What fundamental operating system technology allows Docker containers to share the host kernel while maintaining isolated process boundaries?",
+        hi: "Kaun si core Linux technology Docker containers ko host kernel share karne aur process isolation maintain karne ki anumati deti hai?",
+      },
+      options: [
+        {
+          en: "Linux Namespaces (for isolation) and Control Groups / cgroups (for resource limits)",
+          hi: "Linux Namespaces (isolation ke liye) aur cgroups (CPU/RAM limits ke liye)",
+        },
+        {
+          en: "Type-1 Bare-Metal Hardware Hypervisors",
+          hi: "Type-1 Bare-Metal Hardware Hypervisors",
+        },
+        {
+          en: "Virtual BIOS microcode emulators",
+          hi: "Virtual BIOS microcode emulators",
+        },
+        {
+          en: "Browser local storage sandboxes",
+          hi: "Browser local storage sandboxes",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "Docker leverages Linux Namespaces (PID, NET, IPC, MNT, UTS) to create isolated views of system resources and Control Groups (cgroups) to limit CPU and memory usage.",
+        hi: "Linux Namespaces processes ko network, file system aur process IDs isolate karte hain, aur cgroups CPU/RAM quota restrict karte hain.",
+      },
+    },
+    {
+      q: {
+        en: "Why do Docker containers start in hundreds of milliseconds compared to Virtual Machines taking several minutes?",
+        hi: "Virtual Machines ke mukable Docker containers milliseconds mein kyun start ho jate hain?",
+      },
+      question: {
+        en: "Why do Docker containers start in hundreds of milliseconds compared to Virtual Machines taking several minutes?",
+        hi: "Virtual Machines ke mukable Docker containers milliseconds mein kyun start ho jate hain?",
+      },
+      options: [
+        {
+          en: "Containers share the already running host kernel and do not boot an entire guest operating system",
+          hi: "Containers host ke pehle se chal rahe kernel ko share karte hain aur unhe poora guest OS boot nahi karna padta",
+        },
+        {
+          en: "Containers disable all CPU register calculations",
+          hi: "Containers CPU calculations disable kar dete hain",
+        },
+        {
+          en: "Containers delete all files before booting",
+          hi: "Containers boot se pehle saari files delete kar dete hain",
+        },
+        {
+          en: "Containers only run when connected to Wi-Fi",
+          hi: "Containers sirf Wi-Fi connected hone par chalte hain",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "A VM must boot a complete guest OS kernel, system services, and drivers. A container is simply an isolated process running directly on the existing host OS kernel.",
+        hi: "VM ko poora naya Operating System boot karna padta hai jabki container host OS par direct process ki tarah chalta hai.",
+      },
+    },
+    {
+      q: {
+        en: "What is the relationship between a Docker Image and a Docker Container?",
+        hi: "Docker Image aur Docker Container ke beech kya connection hai?",
+      },
+      question: {
+        en: "What is the relationship between a Docker Image and a Docker Container?",
+        hi: "Docker Image aur Docker Container ke beech kya connection hai?",
+      },
+      options: [
+        {
+          en: "An Image is a read-only blueprint (class); a Container is a runnable live instance (object)",
+          hi: "Image ek read-only blueprint (class) hai; Container uska running instance (object) hai",
+        },
+        {
+          en: "An Image is a text document; a Container is a physical hardware cable",
+          hi: "Image text file hai aur container physical cable hai",
+        },
+        {
+          en: "A Container creates Images only when turned off",
+          hi: "Container sirf band hone par image banata hai",
+        },
+        {
+          en: "They are completely unrelated separate software brands",
+          hi: "Dono bilkul alag alag software hain",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "Analogous to Object-Oriented Programming: a Docker Image is the immutable class definition, while a Container is the running, stateful instance of that class.",
+        hi: "Jaise OOP mein Class aur Object hote hain: Image ek blueprint hai aur Container uska live chalne wala instance hai.",
+      },
+    },
+    {
+      q: {
+        en: "Why is it considered a major security vulnerability to run production Docker containers as the default root user?",
+        hi: "Production Docker container ko default root user par chalana ek badi security vulnerability kyun hai?",
+      },
+      question: {
+        en: "Why is it considered a major security vulnerability to run production Docker containers as the default root user?",
+        hi: "Production Docker container ko default root user par chalana ek badi security vulnerability kyun hai?",
+      },
+      options: [
+        {
+          en: "If an application exploit occurs, container breakout attacks could grant the attacker root privileges on the underlying host machine",
+          hi: "Agar application hack ho jaye, toh container breakout ke zariye attacker ko host server ka poora root access mil sakta hai",
+        },
+        {
+          en: "Root users cannot connect to the internet",
+          hi: "Root users internet se connect nahi ho sakte",
+        },
+        {
+          en: "Root users automatically invert CSS colors",
+          hi: "Root users colors invert kar dete hain",
+        },
+        {
+          en: "Root containers consume 10x more electricity",
+          hi: "Root containers 10 guna zyada bijli kharch karte hain",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "Container root maps to UID 0 by default. A container breakout vulnerability gives the attacker unrestricted root control over the physical host server. Use 'USER node' instead.",
+        hi: "Container root host machine ke root (UID 0) se correspond karta hai. Security ke liye hamesha non-root user (jaise USER node) use karein.",
+      },
+    },
+    {
+      q: {
+        en: "What is the primary role of a .dockerignore file in a MERN project?",
+        hi: "MERN project mein .dockerignore file ka mukhya purpose kya hota hai?",
+      },
+      question: {
+        en: "What is the primary role of a .dockerignore file in a MERN project?",
+        hi: "MERN project mein .dockerignore file ka mukhya purpose kya hota hai?",
+      },
+      options: [
+        {
+          en: "Prevents local node_modules, .env secrets, and .git history from bloating the build context and image layers",
+          hi: "Local node_modules, .env secrets aur .git history ko image ke andar copy hone se rokna",
+        },
+        {
+          en: "Stops Docker from opening port 80",
+          hi: "Docker ko port 80 open karne se rokna",
+        },
+        {
+          en: "Deletes unwanted files from the host desktop automatically",
+          hi: "Desktop se unwanted files delete karna",
+        },
+        {
+          en: "Translates JavaScript code into Python code",
+          hi: "JavaScript ko Python mein convert karna",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: ".dockerignore prevents unwanted directories (node_modules, .git, .env) from being sent to the Docker daemon, drastically speeding up builds and preventing secret leaks.",
+        hi: ".dockerignore local heavy folders (node_modules) aur secret files (.env) ko image mein jaane se rok kar image size chhota aur safe rakhta hai.",
+      },
+    },
+    {
+      q: {
+        en: "Which Dockerfile instruction specifies the base parent image from which the current container build begins?",
+        hi: "Kaun sa Dockerfile instruction base parent image specify karta hai jisse build shuru hota hai?",
+      },
+      question: {
+        en: "Which Dockerfile instruction specifies the base parent image from which the current container build begins?",
+        hi: "Kaun sa Dockerfile instruction base parent image specify karta hai jisse build shuru hota hai?",
+      },
+      options: [
+        { en: "FROM", hi: "FROM" },
+        { en: "START", hi: "START" },
+        { en: "IMPORT", hi: "IMPORT" },
+        { en: "CLONE", hi: "CLONE" },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "The 'FROM' instruction sets the base image (e.g., 'FROM node:20-alpine') for all subsequent build instructions.",
+        hi: "'FROM' instruction base image define karta hai jiske upar aapka code aur dependencies build hote hain.",
+      },
+    },
+    {
+      q: {
+        en: "What is the key advantage of using Multi-Stage builds in a Dockerfile for a React frontend application?",
+        hi: "React frontend ke Dockerfile mein Multi-Stage build use karne ka sabse bada benefit kya hai?",
+      },
+      question: {
+        en: "What is the key advantage of using Multi-Stage builds in a Dockerfile for a React frontend application?",
+        hi: "React frontend ke Dockerfile mein Multi-Stage build use karne ka sabse bada benefit kya hai?",
+      },
+      options: [
+        {
+          en: "Compiles React in Node.js, then copies only the static /dist HTML/CSS/JS into a tiny Nginx image (~25MB), leaving all dev dependencies behind",
+          hi: "React ko Node mein compile karta hai, fir sirf static HTML/JS ko tiny Nginx image (~25MB) mein copy karta hai",
+        },
+        {
+          en: "Multiplies browser animations by 10x",
+          hi: "Browser animations ko 10 guna fast karna",
+        },
+        {
+          en: "Eliminates the need for HTML and CSS files completely",
+          hi: "HTML aur CSS ki zaroorat khatam karna",
+        },
+        {
+          en: "Allows users to run React on microwave ovens",
+          hi: "React ko kisi bhi device par chalana",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "Multi-stage builds decouple the heavy build environment (Node + npm packages ~1GB) from the lightweight runtime (Nginx serving static assets ~25MB), yielding tiny, secure images.",
+        hi: "Multi-stage builds se heavy Node compiler chhoot jata hai aur production image mein sirf static dist files aur lightweight Nginx rehta hai (~25MB).",
+      },
+    },
+    {
+      q: {
+        en: "Which Docker command flag maps host machine port 3000 to container port 5000?",
+        hi: "Host machine ke port 3000 ko container ke port 5000 par map karne ke liye kaun sa flag use hota hai?",
+      },
+      question: {
+        en: "Which Docker command flag maps host machine port 3000 to container port 5000?",
+        hi: "Host machine ke port 3000 ko container ke port 5000 par map karne ke liye kaun sa flag use hota hai?",
+      },
+      options: [
+        { en: "-p 3000:5000", hi: "-p 3000:5000" },
+        { en: "--link 3000-to-5000", hi: "--link 3000-to-5000" },
+        { en: "-port 5000->3000", hi: "-port 5000->3000" },
+        { en: "-route 3000=5000", hi: "-route 3000=5000" },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "The syntax for the publish flag is '-p <host_port>:<container_port>'. Hence '-p 3000:5000' exposes container port 5000 on host port 3000.",
+        hi: "Syntax '-p <host_port>:<container_port>' hota hai. Yani bahar ka port 3000 container ke andar ke port 5000 se connect hoga.",
+      },
+    },
+    {
+      q: {
+        en: "What happens to data stored inside a container's writable layer when that container is removed with 'docker rm'?",
+        hi: "Jab container ko 'docker rm' se delete kiya jata hai, toh uske writable layer ka data kahan jata hai?",
+      },
+      question: {
+        en: "What happens to data stored inside a container's writable layer when that container is removed with 'docker rm'?",
+        hi: "Jab container ko 'docker rm' se delete kiya jata hai, toh uske writable layer ka data kahan jata hai?",
+      },
+      options: [
+        {
+          en: "The writable layer is destroyed and all unmounted data is permanently deleted (ephemeral lifecycle)",
+          hi: "Writable layer destroy ho jata hai aur unmounted data permanently delete ho jata hai",
+        },
+        {
+          en: "Docker automatically uploads all data to Google Drive",
+          hi: "Docker sara data Google Drive par upload kar deta hai",
+        },
+        {
+          en: "Data is converted into an executable PDF on the desktop",
+          hi: "Data PDF file mein convert ho jata hai",
+        },
+        {
+          en: "Data remains locked in CPU cache forever",
+          hi: "Data CPU cache mein hamesha lock rehta hai",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "Containers are stateless and ephemeral by default. To persist state across container deletions, you must use Docker Volumes or Bind Mounts.",
+        hi: "Containers ephemeral hote hain. Persistent data (jaise database files) ke liye hamesha Docker Named Volumes use karna mandatory hota hai.",
+      },
+    },
+    {
+      q: {
+        en: "What mechanism should be used in Docker Compose to ensure MongoDB database records survive container restarts and updates?",
+        hi: "Docker Compose mein MongoDB ka data container restart hone ke baad bhi safe rakhne ke liye kya use karna chahiye?",
+      },
+      question: {
+        en: "What mechanism should be used in Docker Compose to ensure MongoDB database records survive container restarts and updates?",
+        hi: "Docker Compose mein MongoDB ka data container restart hone ke baad bhi safe rakhne ke liye kya use karna chahiye?",
+      },
+      options: [
+        { en: "Named Docker Volumes (e.g., mongo-data:/data/db)", hi: "Named Docker Volumes (e.g., mongo-data:/data/db)" },
+        { en: "Copying files to RAM every 5 minutes", hi: "RAM mein copy karna" },
+        { en: "Running Docker in Debug mode", hi: "Debug mode mein chalana" },
+        { en: "Disabling container termination commands", hi: "Termination commands band karna" },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "Named Volumes persist independently on the host filesystem and remain intact even when containers are stopped, removed, or recreated.",
+        hi: "Docker Named Volumes host system ke managed area mein data store karte hain jo container delete hone par bhi safe rehta hai.",
+      },
+    },
+    {
+      q: {
+        en: "How do separate containers in the same user-defined Docker bridge network discover and communicate with each other?",
+        hi: "Ek hi user-defined Docker bridge network mein alag-alag containers aapas mein kaise communicate karte hain?",
+      },
+      question: {
+        en: "How do separate containers in the same user-defined Docker bridge network discover and communicate with each other?",
+        hi: "Ek hi user-defined Docker bridge network mein alag-alag containers aapas mein kaise communicate karte hain?",
+      },
+      options: [
+        {
+          en: "Via Docker's embedded DNS server using container/service names (e.g., mongodb://mongo:27017)",
+          hi: "Docker ke embedded DNS ke zariye service names use karke (e.g., mongodb://mongo:27017)",
+        },
+        {
+          en: "By pinging public google.com servers continuously",
+          hi: "Google servers ko continuously ping karke",
+        },
+        {
+          en: "Through audio morse code over sound cards",
+          hi: "Sound card se audio signals bhej kar",
+        },
+        {
+          en: "By sharing the exact same MAC address",
+          hi: "Same MAC address share karke",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "User-defined bridge networks provide automatic DNS resolution between containers. Express can connect to MongoDB simply using the service name 'mongo' instead of dynamic IP addresses.",
+        hi: "Docker bridge network automatically container name ko IP address mein resolve kar deta hai, isiliye hardcoded IP ke badle service name 'mongo' use hota hai.",
+      },
+    },
+    {
+      q: {
+        en: "What is the difference between the 'RUN' instruction and the 'CMD' instruction in a Dockerfile?",
+        hi: "Dockerfile mein 'RUN' aur 'CMD' instructions ke beech kya fark hota hai?",
+      },
+      question: {
+        en: "What is the difference between the 'RUN' instruction and the 'CMD' instruction in a Dockerfile?",
+        hi: "Dockerfile mein 'RUN' aur 'CMD' instructions ke beech kya fark hota hai?",
+      },
+      options: [
+        {
+          en: "'RUN' executes during image build time to install software; 'CMD' defines the default command executed when the container starts",
+          hi: "'RUN' image build time par software install karta hai; 'CMD' container start hone par run hota hai",
+        },
+        {
+          en: "'RUN' is for Windows; 'CMD' is for Linux",
+          hi: "'RUN' Windows ke liye hai aur 'CMD' Linux ke liye",
+        },
+        {
+          en: "'RUN' deletes files; 'CMD' creates folders",
+          hi: "'RUN' delete karta hai aur 'CMD' folder banata hai",
+        },
+        {
+          en: "There is no difference, both are strictly interchangeable",
+          hi: "Dono mein koi difference nahi hai",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "'RUN' commits new layers during the image build step (e.g., 'RUN npm install'). 'CMD' specifies the entry command executed when a container is spawned from that image (e.g., 'CMD [\"node\", \"server.js\"]').",
+        hi: "'RUN' build time par chalta hai (jaise npm install) aur naya layer banata hai. 'CMD' container run hote waqt execute hota hai.",
+      },
+    },
+    {
+      q: {
+        en: "Which Docker CLI command allows you to open an interactive bash or sh shell inside an already running container?",
+        hi: "Pehle se chal rahe running container ke andar interactive terminal kholne ke liye kaun sa command use hota hai?",
+      },
+      question: {
+        en: "Which Docker CLI command allows you to open an interactive bash or sh shell inside an already running container?",
+        hi: "Pehle se chal rahe running container ke andar interactive terminal kholne ke liye kaun sa command use hota hai?",
+      },
+      options: [
+        { en: "docker exec -it <container_id> sh", hi: "docker exec -it <container_id> sh" },
+        { en: "docker open --window <container_id>", hi: "docker open --window <container_id>" },
+        { en: "docker connect -screen <container_id>", hi: "docker connect -screen <container_id>" },
+        { en: "docker ssh root@container", hi: "docker ssh root@container" },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "'docker exec -it <id> sh' executes a command inside a running container with interactive (-i) and pseudo-TTY (-t) flags enabled.",
+        hi: "'docker exec -it <id> sh' interactive terminal allocate karke running container ke file system mein shell open kar deta hai.",
+      },
+    },
+    {
+      q: {
+        en: "Why should you prefer 'npm ci' over 'npm install' inside a production Dockerfile?",
+        hi: "Production Dockerfile ke andar 'npm install' ke mukable 'npm ci' kyun prefer kiya jata hai?",
+      },
+      question: {
+        en: "Why should you prefer 'npm ci' over 'npm install' inside a production Dockerfile?",
+        hi: "Production Dockerfile ke andar 'npm install' ke mukable 'npm ci' kyun prefer kiya jata hai?",
+      },
+      options: [
+        {
+          en: "'npm ci' strictly respects package-lock.json, deletes existing node_modules, and ensures 100% deterministic, faster builds",
+          hi: "'npm ci' strictly package-lock.json follow karta hai aur fast, reproducible deterministic install ensure karta hai",
+        },
+        {
+          en: "'npm ci' downloads files via satellite directly",
+          hi: "'npm ci' satellite se direct download karta hai",
+        },
+        {
+          en: "'npm install' is forbidden by European laws",
+          hi: "'npm install' law ke khilaf hai",
+        },
+        {
+          en: "'npm ci' deletes all JavaScript syntax errors",
+          hi: "'npm ci' code ke syntax errors delete kar deta hai",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "'npm ci' (Clean Install) installs exact versions from package-lock.json without modifying it, preventing unexpected dependency drift across environments.",
+        hi: "'npm ci' package-lock.json ke exact versions ko strictly install karta hai aur fast reproducible build deta hai.",
+      },
+    },
+    {
+      q: {
+        en: "What is Docker Layer Caching and how can it drastically speed up 'docker build' times?",
+        hi: "Docker Layer Caching kya hai aur yeh 'docker build' time ko kaise dramatically fast karta hai?",
+      },
+      question: {
+        en: "What is Docker Layer Caching and how can it drastically speed up 'docker build' times?",
+        hi: "Docker Layer Caching kya hai aur yeh 'docker build' time ko kaise dramatically fast karta hai?",
+      },
+      options: [
+        {
+          en: "Docker reuses cached layers from previous builds if the instructions and copied files haven't changed (e.g., copying package.json before source code)",
+          hi: "Agar files change nahi hui hain toh Docker pichle build ke layers reuse kar leta hai (jaise pehle package.json copy karna)",
+        },
+        {
+          en: "By skipping compiler safety checks entirely",
+          hi: "Compiler checks ko skip karke",
+        },
+        {
+          en: "By compressing source files into ZIP archives before compiling",
+          hi: "Source files ko zip mein compress karke",
+        },
+        {
+          en: "By turning off CPU coolers during build",
+          hi: "CPU cooling band karke",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "By copying package.json and running 'npm ci' BEFORE copying the rest of your source code, Docker only re-runs npm install when dependencies change, not on every code edit.",
+        hi: "Pehle package.json copy karke npm ci chalane se dependencies cache ho jati hain, aur code change hone par npm dobara install nahi hota.",
+      },
+    },
+    {
+      q: {
+        en: "Which command stops and removes all containers, networks, and volumes defined in a docker-compose.yml file?",
+        hi: "docker-compose.yml mein defined containers, networks aur volumes ko stop aur clean karne ke liye kaun sa command use hota hai?",
+      },
+      question: {
+        en: "Which command stops and removes all containers, networks, and volumes defined in a docker-compose.yml file?",
+        hi: "docker-compose.yml mein defined containers, networks aur volumes ko stop aur clean karne ke liye kaun sa command use hota hai?",
+      },
+      options: [
+        { en: "docker compose down -v", hi: "docker compose down -v" },
+        { en: "docker compose destroy --force-all", hi: "docker compose destroy --force-all" },
+        { en: "docker kill compose", hi: "docker kill compose" },
+        { en: "docker compose pause", hi: "docker compose pause" },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "'docker compose down' stops and removes containers and networks. The '-v' (or '--volumes') flag also removes named volumes defined in the compose file.",
+        hi: "'docker compose down -v' containers aur networks ke sath-sath named volumes ko bhi clean kar deta hai.",
+      },
+    },
+    {
+      q: {
+        en: "What is the purpose of Docker Health Checks defined via the 'HEALTHCHECK' instruction in a Dockerfile?",
+        hi: "Dockerfile mein 'HEALTHCHECK' instruction ka kya purpose hota hai?",
+      },
+      question: {
+        en: "What is the purpose of Docker Health Checks defined via the 'HEALTHCHECK' instruction in a Dockerfile?",
+        hi: "Dockerfile mein 'HEALTHCHECK' instruction ka kya purpose hota hai?",
+      },
+      options: [
+        {
+          en: "Periodically probes an internal endpoint (e.g., curl -f http://localhost:5000/health) to tell Docker if the app is actually alive and ready to receive traffic",
+          hi: "Periodically app ke health endpoint ko test karta hai taaki pata chal sake ki app sach mein traffic lene ke liye ready hai ya nahi",
+        },
+        {
+          en: "Checks the battery health of the server hardware",
+          hi: "Server battery check karna",
+        },
+        {
+          en: "Scans developer keystrokes for typing errors",
+          hi: "Typing mistakes check karna",
+        },
+        {
+          en: "Sends an email to the doctor every 6 hours",
+          hi: "Doctor ko email bhejna",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "A process may be running while being completely locked or unresponsive. HEALTHCHECK commands verify application readiness, allowing orchestrators (Docker Swarm/K8s) to restart unhealthy containers.",
+        hi: "Process chalne ke bavajood app hang ho sakti hai. HEALTHCHECK verify karta hai ki app responsive hai ya nahi, aur orchestrator ko unhealthy container restart karne deta hai.",
+      },
+    },
+    {
+      q: {
+        en: "Why is Alpine Linux (e.g., node:20-alpine) widely preferred for production container images over Ubuntu/Debian base images?",
+        hi: "Production container images ke liye Ubuntu ke bajaye Alpine Linux (jaise node:20-alpine) kyun preferred hai?",
+      },
+      question: {
+        en: "Why is Alpine Linux (e.g., node:20-alpine) widely preferred for production container images over Ubuntu/Debian base images?",
+        hi: "Production container images ke liye Ubuntu ke bajaye Alpine Linux (jaise node:20-alpine) kyun preferred hai?",
+      },
+      options: [
+        {
+          en: "Ultra-small footprint (~5MB base OS), lightning-fast download/deployment speeds, and a significantly smaller security attack surface",
+          hi: "Bohot chhota size (~5MB), super-fast download/deploy speed aur kam vulnerabilities",
+        },
+        {
+          en: "Alpine Linux has built-in artificial intelligence models",
+          hi: "Alpine mein AI built-in hoti hai",
+        },
+        {
+          en: "Alpine Linux only runs in Switzerland",
+          hi: "Alpine sirf Switzerland mein chalta hai",
+        },
+        {
+          en: "Ubuntu is blocked by cloud providers",
+          hi: "Ubuntu cloud providers par blocked hai",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "Alpine Linux is built on musl libc and busybox, resulting in a 5MB base OS. Smaller images deploy faster across CI/CD pipelines and contain fewer extraneous packages that could harbor vulnerabilities.",
+        hi: "Alpine Linux lightweight hota hai (~5MB). Chhote images deploy karne mein fast hote hain aur unme unnecessary packages na hone se security attack surface kam hota hai.",
+      },
+    },
+    {
+      q: {
+        en: "In a MERN stack docker-compose.yml file, what does the 'depends_on' attribute configure?",
+        hi: "MERN docker-compose.yml file mein 'depends_on' attribute kya configure karta hai?",
+      },
+      question: {
+        en: "In a MERN stack docker-compose.yml file, what does the 'depends_on' attribute configure?",
+        hi: "MERN docker-compose.yml file mein 'depends_on' attribute kya configure karta hai?",
+      },
+      options: [
+        {
+          en: "Controls startup order, ensuring MongoDB starts before Express API, and Express API starts before React frontend",
+          hi: "Container startup order control karta hai, jaise Express se pehle MongoDB start ho",
+        },
+        {
+          en: "Downloads extra RAM from cloud servers",
+          hi: "Extra RAM download karna",
+        },
+        {
+          en: "Merges two separate GitHub repositories into one",
+          hi: "Do repos ko ek mein merge karna",
+        },
+        {
+          en: "Limits internet bandwidth to 10kbps",
+          hi: "Internet bandwidth limit karna",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "'depends_on' dictates the startup order of dependent services, ensuring the database container is initialized before the API container attempts to connect.",
+        hi: "'depends_on' services ka startup order define karta hai taaki database pehle initialize ho aur backend connection error na de.",
+      },
+    },
+    {
+      q: {
+        en: "What command removes all unused, stopped containers, dangling images, and build caches in one safe sweep?",
+        hi: "Saare stopped containers, unused images aur build cache ko ek sath clean karne ke liye kaun sa command use hota hai?",
+      },
+      question: {
+        en: "What command removes all unused, stopped containers, dangling images, and build caches in one safe sweep?",
+        hi: "Saare stopped containers, unused images aur build cache ko ek sath clean karne ke liye kaun sa command use hota hai?",
+      },
+      options: [
+        { en: "docker system prune", hi: "docker system prune" },
+        { en: "docker format disk", hi: "docker format disk" },
+        { en: "docker erase all", hi: "docker erase all" },
+        { en: "rm -rf /docker", hi: "rm -rf /docker" },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "'docker system prune' cleans stopped containers, unused networks, and dangling images. Adding '--volumes' also cleans unused volumes.",
+        hi: "'docker system prune' unused containers, dangling images aur build cache ko delete karke disk space free karta hai.",
+      },
+    },
+    {
+      q: {
+        en: "In production Kubernetes or Docker Swarm, why are containers configured with restart policies like 'restart: always' or 'restart: unless-stopped'?",
+        hi: "Production mein containers par 'restart: always' policy kyun lagayi jaati hai?",
+      },
+      question: {
+        en: "In production Kubernetes or Docker Swarm, why are containers configured with restart policies like 'restart: always' or 'restart: unless-stopped'?",
+        hi: "Production mein containers par 'restart: always' policy kyun lagayi jaati hai?",
+      },
+      options: [
+        {
+          en: "Ensures that if an uncaught exception or host server reboot occurs, the container daemon automatically revives the service without manual intervention",
+          hi: "Server reboot ya process crash hone par container ko automatically bina manual intervention ke restart kar deta hai",
+        },
+        {
+          en: "Reboots the container every 30 seconds to refresh RAM",
+          hi: "Har 30 second par container reboot karna",
+        },
+        {
+          en: "Prevents code changes from being saved",
+          hi: "Code changes save hone se rokna",
+        },
+        {
+          en: "Forces all database queries to re-execute 5 times",
+          hi: "Queries ko 5 baar re-run karna",
+        },
+      ],
+      answerIndex: 0,
+      correctAnswer: 0,
+      explanation: {
+        en: "Restart policies guarantee high availability by automatically restarting crashed processes and ensuring services come back up when the physical host system restarts.",
+        hi: "'restart: always' high availability guarantee karta hai; agar server crash ho ya reboot ho, container bina developer intervention ke automatically wapas up ho jata hai.",
+      },
+    },
+  ],
+};

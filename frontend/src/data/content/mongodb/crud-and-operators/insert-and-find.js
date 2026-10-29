@@ -1,0 +1,1103 @@
+export default {
+  id: "mongo-insert-find",
+  title: {
+    en: "Insert & Find: Comparison & Logical Operators",
+    hi: "Insert & Find: Operators ($gt, $in, $and, $or)",
+  },
+  difficulty: "Beginner",
+  readTime: 10,
+  sections: [
+    {
+      type: "concept",
+      heading: {
+        en: "1. MongoDB Query Fundamentals: Insert & Find",
+        hi: "1. MongoDB Query Fundamentals: Insert aur Find",
+      },
+      body: {
+        en: `MongoDB stores data as BSON documents inside collections. The primary operations for adding and querying data are:
+
+### Insertion Methods:
+- \`insertOne(doc, options)\`: Inserts a single document. If no \`_id\` field is provided, MongoDB automatically generates a 12-byte \`ObjectId\`.
+- \`insertMany([doc1, doc2, ...], options)\`: Inserts an array of documents atomically in batches. By default, it operates with \`{ ordered: true }\` (if document 3 fails validation, operations stop immediately). With \`{ ordered: false }\`, execution continues for subsequent valid documents.
+
+### Query Methods:
+- \`findOne(filter, projection)\`: Returns the **first matching document** as a plain JavaScript object, or \`null\` if nothing matches.
+- \`find(filter, projection)\`: Returns an active **MongoDB Cursor** (an iterable pointer) to documents matching the criteria. Does not load all documents into Node.js memory at once!`,
+        hi: `MongoDB mein data BSON documents ke roop mein collections ke andar store hota hai. Data create aur fetch karne ke mukhya functions yeh hain:
+
+### Insert Karne Ke Methods:
+- \`insertOne(doc, options)\`: Ek single document insert karta hai. Agar aap \`_id\` provide nahi karte, toh MongoDB automatically ek unique 12-byte \`ObjectId\` generate kar deta hai.
+- \`insertMany([doc1, doc2, ...], options)\`: Documents ki array ko batch mein insert karta hai. By default \`{ ordered: true }\` hota hai (agar 3rd document fail ho jaye toh aage ke inserts ruk jaate hain). \`{ ordered: false }\` se baaki valid documents insert hote rehte hain.
+
+### Query Karne Ke Methods:
+- \`findOne(filter, projection)\`: Filter match karne wala **pehla document** return karta hai, ya koi match na mile toh \`null\` deta hai.
+- \`find(filter, projection)\`: Matches par ek **Cursor** (iterable pointer) return karta hai. Yeh saare documents ko ek sath RAM mein load nahi karta, balki chunks mein stream karta hai!`,
+      },
+    },
+    {
+      type: "concept",
+      heading: {
+        en: "2. Comparison & Logical Operators",
+        hi: "2. Comparison aur Logical Operators Ka Khel",
+      },
+      body: {
+        en: `In SQL, you write \`WHERE price > 500 AND category = 'Electronics'\`. In MongoDB, all queries are expressed as JSON/BSON filter objects using special \`$\` prefixed operator keys.
+
+### Comparison Operators:
+- \`$eq\`: Equal to (\`{ age: { $eq: 25 } }\` or shorthand \`{ age: 25 }\`)
+- \`$ne\`: Not equal to (\`{ status: { $ne: 'deleted' } }\`)
+- \`$gt\` / \`$gte\`: Greater than / Greater than or equal to (\`{ price: { $gte: 999 } }\`)
+- \`$lt\` / \`$lte\`: Less than / Less than or equal to (\`{ rating: { $lt: 3.5 } }\`)
+- \`$in\`: Matches any value in an array (\`{ category: { $in: ['Mobiles', 'Laptops'] } }\`)
+- \`$nin\`: Not in array (\`{ role: { $nin: ['banned', 'suspended'] } }\`)
+
+### Logical Operators:
+- \`$and\`: Joins query clauses where **all** conditions must match (\`{ $and: [{ inStock: true }, { price: { $lt: 500 } }] }\`)
+- \`$or\`: Joins query clauses where **at least one** condition must match (\`{ $or: [{ role: 'admin' }, { isSuperUser: true }] }\`)
+- \`$nor\`: Fails if any of the given clauses match
+- \`$not\`: Inverts the effect of a query expression (\`{ price: { $not: { $gt: 100 } } }\`)`,
+        hi: `SQL mein aap likhte the \`WHERE price > 500 AND category = 'Electronics'\`. MongoDB mein saari queries JSON object ke form mein hoti hain jahan operators \`$\` sign se shuru hote hain.
+
+### Comparison Operators:
+- \`$eq\`: Barabar (equal) (\`{ age: { $eq: 25 } }\` ya simple \`{ age: 25 }\`)
+- \`$ne\`: Barabar nahi (not equal) (\`{ status: { $ne: 'deleted' } }\`)
+- \`$gt\` / \`$gte\`: Bada / Bada ya barabar (\`{ price: { $gte: 999 } }\`)
+- \`$lt\` / \`$lte\`: Chhota / Chhota ya barabar (\`{ rating: { $lt: 3.5 } }\`)
+- \`$in\`: Array ke kisi bhi ek value se match kare (\`{ city: { $in: ['Delhi', 'Mumbai', 'Bangalore'] } }\`)
+- \`$nin\`: Array ke kisi bhi value se match na kare (\`{ role: { $nin: ['blocked', 'deleted'] } }\`)
+
+### Logical Operators:
+- \`$and\`: Saari shartein poori honi chahiye (\`{ $and: [{ inStock: true }, { price: { $lt: 500 } }] }\`)
+- \`$or\`: Di gayi sharton mein se kam se kam ek sahi ho (\`{ $or: [{ role: 'admin' }, { isSuperUser: true }] }\`)
+- \`$nor\`: Di gayi koi bhi shart match nahi honi chahiye
+- \`$not\`: Kisi query expression ko ulta karta hai`,
+      },
+    },
+    {
+      type: "analogy",
+      heading: {
+        en: "Real-Life Analogy: The Kirana Store Grocery Register",
+        hi: "Real-Life Analogy: Desi Kirana Store Ka Udhar & Stock Register",
+      },
+      body: {
+        en: `Imagine Sharma-ji managing his neighborhood grocery store (Kirana store) with a master inventory notebook:
+
+- **\`insertOne\`**: Sharma-ji writes down a brand new sack of Basmati Rice arrived today on line 42 with its purchase date and cost price.
+- **\`insertMany\`**: The wholesale milk distributor delivers Amul Milk, Paneer, Curd, and Butter at 6:00 AM. Sharma-ji records all 4 dairy items together in one quick batch entry.
+- **\`findOne({ item: 'Tata Salt' })\`**: A customer asks "Do you have Tata Salt?". Sharma-ji looks down at his register, finds the first packet on shelf 2, and answers immediately.
+- **\`find({ price: { $lte: 50 }, category: 'Biscuits' })\`**: A kid enters with a ₹50 note saying "Bhaiya, show me all biscuits under ₹50!". Sharma-ji checks Parle-G (₹10), Good Day (₹30), and Bourbon (₹40).
+- **\`{ brand: { $in: ['Amul', 'Mother Dairy'] } }\`**: A customer wants butter only from Amul or Mother Dairy, ignoring other local brands.`,
+        hi: `Sochiye Sharma-ji apne mohalle ke Kirana Store mein ek notebook maintain kar rahe hain:
+
+- **\`insertOne\`**: Subah ek naya dry-fruits ka box aaya. Sharma-ji ne register ki line 42 par uska naam, expiry date aur price likh diya.
+- **\`insertMany\`**: Subah 6 baje Amul ki gaadi aayi aur doodh, dahi, paneer, aur butter deliver kiya. Sharma-ji ne ek sath 4 items register mein note kar liye.
+- **\`findOne({ item: 'Tata Salt' })\`**: Grahak ne poocha "Tata Salt hai kya?". Sharma-ji ne register dekha aur pehla packet utha kar de diya.
+- **\`find({ price: { $lte: 50 }, category: 'Biscuits' })\`**: Ek bachha ₹50 ka note laya aur bola "50 rupaye ke andar waale saare biscuits dikhao!". Sharma-ji ne filter lagaya: Parle-G (₹10), Marie Gold (₹30), Bourbon (₹40).
+- **\`{ brand: { $in: ['Amul', 'Mother Dairy'] } }\`**: Grahak ne bola mujhe sirf Amul ya Mother Dairy ka dahi chahiye, baaki koi local brand nahi.`,
+      },
+    },
+    {
+      type: "syntax",
+      heading: {
+        en: "Syntax & Signature: Native Driver vs Mongoose",
+        hi: "Syntax & Signatures: Native MongoDB Driver aur Mongoose",
+      },
+      body: {
+        en: `### Native MongoDB Driver Syntax:
+\`\`\`javascript
+// Insert operations
+const result = await collection.insertOne({ name: "Aman", age: 24 });
+console.log(result.insertedId); // ObjectId("...")
+
+const batchResult = await collection.insertMany([
+  { name: "Pooja", age: 22 },
+  { name: "Rohan", age: 28 }
+], { ordered: true });
+console.log(batchResult.insertedCount); // 2
+
+// Find operations
+const singleUser = await collection.findOne({ email: "aman@example.com" });
+
+// Find returns a Cursor - convert to Array or iterate
+const adultUsers = await collection.find({
+  age: { $gte: 18 },
+  city: { $in: ["Delhi", "Mumbai"] }
+}).toArray();
+\`\`\`
+
+### Mongoose Query Shorthand:
+\`\`\`javascript
+// In Mongoose, find() returns a Query (thenable)
+const users = await User.find({
+  price: { $gte: 500, $lte: 2000 },
+  tags: { $in: ["electronics", "gadgets"] }
+});
+\`\`\``,
+        hi: `### Native MongoDB Driver Syntax:
+\`\`\`javascript
+// Insert operation
+const result = await collection.insertOne({ name: "Aman", age: 24 });
+console.log(result.insertedId); // Generated ObjectId
+
+// Insert many
+const batchResult = await collection.insertMany([
+  { name: "Pooja", age: 22 },
+  { name: "Rohan", age: 28 }
+]);
+
+// Find single document
+const user = await collection.findOne({ email: "aman@example.com" });
+
+// Find returns Cursor -> .toArray() use karein array lene ke liye
+const activeUsers = await collection.find({
+  age: { $gte: 18 },
+  status: "active"
+}).toArray();
+\`\`\``,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 1: Basic Inserts and Simple Comparisons",
+        hi: "Example 1: Basic Inserts aur Simple Comparisons",
+      },
+      body: {
+        en: `Inserting documents into a \`students\` collection and querying with numeric boundary comparisons (\`$gt\`, \`$lte\`).`,
+        hi: `\`students\` collection mein documents insert karna aur numeric operators se search karna.`,
+      },
+      code: {
+        language: "javascript",
+        filename: "basic-insert-find.js",
+        snippet: `import { MongoClient } from "mongodb";
+
+const uri = "mongodb://127.0.0.1:27017";
+const client = new MongoClient(uri);
+
+async function run() {
+  try {
+    await client.connect();
+    const db = client.db("schoolDB");
+    const students = db.collection("students");
+
+    // Clean previous test data
+    await students.deleteMany({});
+
+    // 1. insertMany
+    const insertResult = await students.insertMany([
+      { name: "Aarav Sharma", score: 92, stream: "Science", passed: true },
+      { name: "Diya Patel", score: 78, stream: "Commerce", passed: true },
+      { name: "Kabir Verma", score: 45, stream: "Arts", passed: false },
+      { name: "Ananya Iyer", score: 88, stream: "Science", passed: true },
+      { name: "Vikram Singh", score: 55, stream: "Commerce", passed: true }
+    ]);
+    console.log(\`Inserted \${insertResult.insertedCount} students.\`);
+
+    // 2. Query students with score >= 75 (Distinction)
+    const toppers = await students.find({
+      score: { $gte: 75 }
+    }).toArray();
+    console.log("Toppers (score >= 75):", toppers.map(s => \`\${s.name} (\${s.score})\`));
+
+    // 3. Query science students who scored strictly less than 90
+    const scienceUnder90 = await students.find({
+      stream: "Science",
+      score: { $lt: 90 }
+    }).toArray();
+    console.log("Science students < 90:", scienceUnder90.map(s => s.name));
+
+  } finally {
+    await client.close();
+  }
+}
+
+run().catch(console.error);
+
+/*
+Expected Output:
+Inserted 5 students.
+Toppers (score >= 75): [ 'Aarav Sharma (92)', 'Diya Patel (78)', 'Ananya Iyer (88)' ]
+Science students < 90: [ 'Ananya Iyer' ]
+*/`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 2: Complex Logical Queries ($or, $and, $in, $regex)",
+        hi: "Example 2: Logical Queries ($or, $and, $in, $regex)",
+      },
+      body: {
+        en: `Executing sophisticated multi-clause queries using \`$or\`, \`$in\` array memberships, and case-insensitive regex filtering.`,
+        hi: `\`$or\`, \`$in\` aur regex search ke sath multi-condition queries execute karna.`,
+      },
+      code: {
+        language: "javascript",
+        filename: "logical-operators.js",
+        snippet: `import { MongoClient } from "mongodb";
+
+const client = new MongoClient("mongodb://127.0.0.1:27017");
+
+async function filterUsers() {
+  await client.connect();
+  const users = client.db("appDB").collection("users");
+
+  await users.deleteMany({});
+  await users.insertMany([
+    { name: "Rajesh Kumar", role: "moderator", city: "Jaipur", karma: 420 },
+    { name: "Neha Gupta", role: "admin", city: "Bengaluru", karma: 1200 },
+    { name: "Sunil Joshi", role: "user", city: "Mumbai", karma: 150 },
+    { name: "Priya Menon", role: "user", city: "Chennai", karma: 890 },
+    { name: "Amitabh Roy", role: "moderator", city: "Kolkata", karma: 50 }
+  ]);
+
+  // Query: Users who are EITHER 'admin' OR have karma >= 800
+  // AND reside in either Bengaluru, Mumbai, or Chennai
+  const privilegedOrHighKarmaInMetros = await users.find({
+    $and: [
+      {
+        $or: [
+          { role: "admin" },
+          { karma: { $gte: 800 } }
+        ]
+      },
+      {
+        city: { $in: ["Bengaluru", "Mumbai", "Chennai"] }
+      }
+    ]
+  }).toArray();
+
+  console.log("Matched Users:", privilegedOrHighKarmaInMetros.map(u => ({
+    name: u.name,
+    role: u.role,
+    karma: u.karma,
+    city: u.city
+  })));
+
+  // Regex Query: Search users whose name contains 'kumar' or 'gupta' (case-insensitive)
+  const patternMatch = await users.find({
+    name: { $regex: /kumar|gupta/i }
+  }).toArray();
+  console.log("Regex Name Search:", patternMatch.map(u => u.name));
+
+  await client.close();
+}
+
+filterUsers().catch(console.error);
+
+/*
+Expected Output:
+Matched Users: [
+  { name: 'Neha Gupta', role: 'admin', karma: 1200, city: 'Bengaluru' },
+  { name: 'Priya Menon', role: 'user', karma: 890, city: 'Chennai' }
+]
+Regex Name Search: [ 'Rajesh Kumar', 'Neha Gupta' ]
+*/`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 3: Real-World E-Commerce Product Catalog Filter Service",
+        hi: "Example 3: Production E-Commerce Product Filter Service",
+      },
+      body: {
+        en: `A production-ready query builder function handling dynamic query params (price range, brands array, in-stock toggle, text search).`,
+        hi: `Production-ready dynamic product filter service jo Express API ke query parameters ko MongoDB queries mein translate karti hai.`,
+      },
+      code: {
+        language: "javascript",
+        filename: "product-filter-service.js",
+        snippet: `/**
+ * Builds a dynamic MongoDB filter object from incoming HTTP req.query
+ * Handles price ranges, array matching, text search, and stock status.
+ */
+export function buildProductFilter(queryParams) {
+  const filter = { isDeleted: { $ne: true } };
+
+  // 1. Text search across title & description
+  if (queryParams.search) {
+    // Sanitize regex special characters
+    const escaped = queryParams.search.replace(/[.*+?^\${}()|[\\]\\\\]/g, "\\\\$&");
+    filter.title = { $regex: escaped, $options: "i" };
+  }
+
+  // 2. Numeric Price Range Filter ($gte, $lte)
+  if (queryParams.minPrice || queryParams.maxPrice) {
+    filter.price = {};
+    if (queryParams.minPrice) filter.price.$gte = Number(queryParams.minPrice);
+    if (queryParams.maxPrice) filter.price.$lte = Number(queryParams.maxPrice);
+  }
+
+  // 3. Multi-brand selection ($in)
+  if (queryParams.brands) {
+    const brandList = Array.isArray(queryParams.brands)
+      ? queryParams.brands
+      : queryParams.brands.split(",");
+    filter.brand = { $in: brandList.map(b => b.trim()) };
+  }
+
+  // 4. In-stock Boolean filter ($gt on quantity)
+  if (queryParams.inStock === "true" || queryParams.inStock === true) {
+    filter.stockQuantity = { $gt: 0 };
+  }
+
+  // 5. Customer Rating threshold
+  if (queryParams.minRating) {
+    filter.rating = { $gte: Number(queryParams.minRating) };
+  }
+
+  return filter;
+}
+
+// Simulation Test
+const incomingRequestQuery = {
+  search: "wireless earphone",
+  minPrice: "1000",
+  maxPrice: "4000",
+  brands: "Boat,Noise,Realme",
+  inStock: "true",
+  minRating: "4.0"
+};
+
+const mongoFilter = buildProductFilter(incomingRequestQuery);
+console.log("Generated MongoDB Filter Object:");
+console.log(JSON.stringify(mongoFilter, null, 2));
+
+/*
+Expected Output:
+Generated MongoDB Filter Object:
+{
+  "isDeleted": { "$ne": true },
+  "title": { "$regex": "wireless earphone", "$options": "i" },
+  "price": { "$gte": 1000, "$lte": 4000 },
+  "brand": { "$in": ["Boat", "Noise", "Realme"] },
+  "stockQuantity": { "$gt": 0 },
+  "rating": { "$gte": 4 }
+}
+*/`,
+      },
+    },
+    {
+      type: "mistakes",
+      heading: {
+        en: "Common Mistakes & How to Fix Them",
+        hi: "Aam Galatiyan Aur Unka Solution",
+      },
+      body: {
+        en: `### 1. Passing a Plain String Instead of \`new ObjectId(id)\` in Native Driver
+- **Mistake**: Calling \`collection.findOne({ _id: "655b12f8a..." })\`. In native MongoDB driver, \`_id\` is stored as a BSON \`ObjectId\` binary type. A string will return \`null\`!
+- **Fix**: Always convert hex strings: \`import { ObjectId } from 'mongodb'; collection.findOne({ _id: new ObjectId(id) })\`. (Note: Mongoose casts automatically, but the native driver does not).
+
+### 2. Overwriting Duplicate Keys in JavaScript Objects
+- **Mistake**: Writing \`{ price: { $gt: 100 }, price: { $lt: 500 } }\`. In JavaScript, the second \`price\` key overwrites the first! Only \`price: { $lt: 500 }\` executes.
+- **Fix**: Combine them into one operator object: \`{ price: { $gt: 100, $lt: 500 } }\` or use \`$and\`.
+
+### 3. Using JavaScript Array \`[...]\` Instead of \`$in\`
+- **Mistake**: Writing \`{ category: ['Electronics', 'Books'] }\`. This looks for documents where \`category\` is literally an array containing both items in that exact order!
+- **Fix**: Use \`{ category: { $in: ['Electronics', 'Books'] } }\` to match any document belonging to either category.
+
+### 4. Forgetting to Await \`toArray()\` on \`find()\`
+- **Mistake**: \`const users = collection.find({ active: true });\` — \`users\` is a Cursor object, not an array of documents!
+- **Fix**: Always call and await: \`const users = await collection.find({ active: true }).toArray();\`.`,
+        hi: `### 1. Native Driver Mein String ID Pass Karna
+- **Galati**: \`collection.findOne({ _id: "655b12f8a..." })\` likhna. Native driver mein \`_id\` BSON \`ObjectId\` hota hai, raw string dhoondne par hamesha \`null\` milega!
+- **Solution**: \`new ObjectId(id)\` mein convert karein: \`collection.findOne({ _id: new ObjectId(id) })\`.
+
+### 2. JavaScript Object Mein Duplicate Keys Overwrite Hona
+- **Galati**: \`{ price: { $gt: 100 }, price: { $lt: 500 } }\` likhna. JavaScript doosre \`price\` se pehle wale ko mita deta hai!
+- **Solution**: Dono operators ek hi object mein rakhein: \`{ price: { $gt: 100, $lt: 500 } }\`.
+
+### 3. Array Equality vs \`$in\` Operator
+- **Galati**: \`{ category: ['Mobile', 'Laptop'] }\` likhna. Isse wahi document match honge jinki category exact yeh array hogi.
+- **Solution**: Agar dono mein se koi bhi match chahiye toh \`$in\` use karein: \`{ category: { $in: ['Mobile', 'Laptop'] } }\`.
+
+### 4. \`find()\` Par \`toArray()\` Na Lagana
+- **Galati**: \`const users = collection.find({ active: true })\` likhna. Yeh Cursor object deta hai, data array nahi.
+- **Solution**: \`await collection.find(...).toArray()\` use karein.`,
+      },
+    },
+    {
+      type: "tip",
+      heading: {
+        en: "Best Practices for Insert & Find Operations",
+        hi: "Insert & Find Ke Best Practices",
+      },
+      body: {
+        en: `1. **Prefer \`$in\` Over Multiple \`$or\` Clauses**: \`{ status: { $in: ['pending', 'failed'] } }\` is dramatically faster and easier for the query planner to index than \`{ $or: [{ status: 'pending' }, { status: 'failed' }] }\`.
+2. **Never Perform Unbounded \`find()\`**: Always combine \`find()\` with \`.limit()\` or pagination to prevent bringing 500,000 documents into Node.js heap memory and crashing the server (OOM error).
+3. **Use \`insertMany\` with \`{ ordered: false }\` for Bulk Imports**: If you are importing 10,000 records, unordered insertion lets MongoDB process writes concurrently across shards and won't halt on a single duplicate key error.
+4. **Always Sanitize User Inputs in \`$regex\` Queries**: Avoid ReDoS (Regular Expression Denial of Service) by escaping user query strings or prefer text indexes (\`$text\`).`,
+        hi: `1. **Multiple \`$or\` Ki Jagah \`$in\` Use Karein**: \`{ status: { $in: ['pending', 'failed'] } }\` MongoDB ke query optimizer ke liye fast hota hai.
+2. **Khabhi Bhi Unbounded \`find()\` Na Chalayein**: Hamesha \`.limit()\` ya pagination lagayein, warna lakhon records Node.js ki memory mein aakar server crash (Out Of Memory) kar denge.
+3. **Bulk Data Ke Liye \`{ ordered: false }\` Use Karein**: 10,000 records import karte waqt \`ordered: false\` se ek duplicate error ki wajah se poora batch nahi rukta.
+4. **User Input Regex Ko Escape Karein**: ReDoS attack se bachne ke liye user input ko hamesha sanitize karein ya Full-Text Search (\`$text\`) ka use karein.`,
+      },
+    },
+    {
+      type: "interview",
+      heading: {
+        en: "Top Interview Questions & Answers",
+        hi: "Top Interview Sawaal Aur Jawab",
+      },
+      body: {
+        en: `### Q1: What is the difference between \`findOne()\` and \`find()\`?
+**Answer**:
+- \`findOne(filter)\`: Returns a single plain JavaScript document directly from disk into memory. If no document matches, it resolves to \`null\`.
+- \`find(filter)\`: Does **not** return documents directly. It returns an active **MongoDB Cursor**. The cursor fetches records in batches (default batch size ~101 documents or 4 MB) as you iterate or call \`.toArray()\`.
+
+### Q2: What happens when \`insertMany()\` encounters an error halfway through with \`ordered: true\` vs \`ordered: false\`?
+**Answer**:
+- \`ordered: true\` (default): Documents are inserted serially in array order. If document index 4 violates a unique index, insertion stops immediately. Documents 0 to 3 remain inserted, but documents 5 and beyond are never attempted.
+- \`ordered: false\`: MongoDB attempts to insert all documents in parallel. If document 4 fails, it records the write error in the bulk response, but documents 5, 6, and onwards are still processed and inserted.
+
+### Q3: How do \`$and\` and implicit comma separation differ in MongoDB queries?
+**Answer**:
+\`{ age: { $gte: 18 }, status: "active" }\` implicitly applies an AND condition between different fields. You only need explicit \`$and\` when you need to query the **same field multiple times** with different conditions (like \`{ $and: [{ tags: "tech" }, { tags: "news" }] }\`) or combine multiple \`$or\` blocks.`,
+        hi: `### Q1: \`findOne()\` aur \`find()\` mein kya antar hai?
+**Jawab**:
+- \`findOne(filter)\`: Filter match karne wala single document seedhe memory mein lata hai. Match na milne par \`null\` deta hai.
+- \`find(filter)\`: Documents seedhe nahi deta, balki ek **Cursor** return karta hai jo background mein 101 documents ya 4 MB ke batches mein stream karta hai.
+
+### Q2: \`insertMany\` mein \`ordered: true\` aur \`ordered: false\` mein kya farq hai?
+**Jawab**:
+- \`ordered: true\` (default): Serial execution hota hai. Agar 4th document par unique key error aaya toh operation wahin ruk jata hai; 5th document insert nahi hoga.
+- \`ordered: false\`: Parallel execution hota hai. 4th document fail hone par bhi aage ke saare valid documents insert ho jate hain aur end mein errors ki list milti hai.
+
+### Q3: Implicit AND aur explicit \`$and\` operator mein kya antar hai?
+**Jawab**:
+\`{ age: { $gte: 18 }, status: "active" }\` comma laga kar likhne par internally AND hi hota hai. Explicit \`$and\` ki zaroorat tab padti hai jab aapko ek hi field par alag-alag expressions chalane hon ya do \`$or\` conditions ko aapas mein jodhna ho.`,
+      },
+    },
+    {
+      type: "summary",
+      heading: {
+        en: "Quick Summary: Insert & Find Operators",
+        hi: "Quick Summary: Insert & Find Operators",
+      },
+      body: {
+        en: `- **\`insertOne\` & \`insertMany\`**: Primary insertion methods; \`ordered: false\` enables unordered bulk insertion.
+- **\`find\` returns a Cursor**: Never forgets that \`find()\` streams data; consume with \`.toArray()\` or a \`for await...of\` loop.
+- **Comparison Operators**: \`$eq\`, \`$ne\`, \`$gt\`, \`$gte\`, \`$lt\`, \`$lte\`, \`$in\`, \`$nin\`.
+- **Logical Operators**: \`$and\`, \`$or\`, \`$nor\`, \`$not\` for compound conditional logic.
+- **Array matching**: Use \`$in\` to check if a field matches any value in a list of allowed choices.`,
+        hi: `- **\`insertOne\` aur \`insertMany\`**: Data create karne ke methods; \`ordered: false\` se fast batch inserts hote hain.
+- **\`find\` Cursor return karta hai**: Lakhon records se memory bachane ke liye cursor ka use hota hai, \`.toArray()\` se array milti hai.
+- **Comparison Operators**: \`$gt\`, \`$gte\`, \`$lt\`, \`$lte\`, \`$in\` value compare karte hain.
+- **Logical Operators**: \`$and\`, \`$or\`, \`$not\` conditions ko jodne ke kaam aate hain.
+- **\`$in\` Best Practice**: Multiple \`$or\` conditions se behtar aur tez \`$in\` operator hota hai.`,
+      },
+    },
+  ],
+  quiz: [
+  {
+    "q": {
+      "en": "What does collection.find({ age: { $gt: 20 } }) return in the native Node.js MongoDB driver?",
+      "hi": "Native Node.js MongoDB driver mein collection.find(...) kya return karta hai?"
+    },
+    "options": [
+      {
+        "en": "An array of all matched documents in memory",
+        "hi": "Memory mein saare matched documents ka array"
+      },
+      {
+        "en": "A MongoDB Cursor pointing to the query results",
+        "hi": "Query results ki taraf point karne wala MongoDB Cursor"
+      },
+      {
+        "en": "A single matched document object",
+        "hi": "Ek single matched document object"
+      },
+      {
+        "en": "A boolean indicating if matching records exist",
+        "hi": "Ek boolean jo batata hai ki record mila ya nahi"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "find() returns a Cursor stream. You must call .toArray() or iterate with a cursor loop to retrieve the actual document records.",
+      "hi": "find() Cursor return karta hai. Documents pane ke liye .toArray() ya cursor iteration ka use karna padta hai."
+    }
+  },
+  {
+    "q": {
+      "en": "Which operator matches documents where a field value equals ANY value in a provided list?",
+      "hi": "Kaunsa operator un documents ko dhoondta hai jinki value di gayi list mein se kisi bhi ek value se match kare?"
+    },
+    "options": [
+      {
+        "en": "$all",
+        "hi": "$all"
+      },
+      {
+        "en": "$in",
+        "hi": "$in"
+      },
+      {
+        "en": "$or",
+        "hi": "$or"
+      },
+      {
+        "en": "$eqArray",
+        "hi": "$eqArray"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "$in takes an array of values and matches documents where the field equals any member of that array.",
+      "hi": "$in ek array leta hai aur un sabhi documents ko match karta hai jahan field value us array ke kisi bhi element ke barabar ho."
+    }
+  },
+  {
+    "q": {
+      "en": "Why is { price: { $gt: 100 }, price: { $lt: 500 } } buggy in plain JavaScript?",
+      "hi": "Plain JavaScript mein { price: { $gt: 100 }, price: { $lt: 500 } } mein kya bug hai?"
+    },
+    "options": [
+      {
+        "en": "MongoDB doesn't support $gt and $lt together",
+        "hi": "MongoDB $gt aur $lt ek sath support nahi karta"
+      },
+      {
+        "en": "JavaScript object duplicate keys overwrite earlier ones, losing $gt: 100",
+        "hi": "JavaScript object mein duplicate keys pehle wali key ko overwrite kar deti hain"
+      },
+      {
+        "en": "Prices must always be integers in MongoDB",
+        "hi": "MongoDB mein price hamesha integer hona chahiye"
+      },
+      {
+        "en": "The query requires an explicit $between operator",
+        "hi": "Query ke liye explicit $between operator chahiye"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "In standard JS object syntax, duplicate keys overwrite previous ones. You must write { price: { $gt: 100, $lt: 500 } }.",
+      "hi": "JavaScript objects mein same key do baar likhne par baad wali key pehli wali ko overwrite kar deti hai."
+    }
+  },
+  {
+    "q": {
+      "en": "What is the behavior of insertMany([...], { ordered: false }) if document index 2 causes a duplicate key error?",
+      "hi": "insertMany([...], { ordered: false }) mein agar 2nd document duplicate error de, toh kya hoga?"
+    },
+    "options": [
+      {
+        "en": "All inserted documents are rolled back completely",
+        "hi": "Saare inserted documents rollback ho jayenge"
+      },
+      {
+        "en": "Execution halts and subsequent documents are skipped",
+        "hi": "Execution ruk jayegi aur aage ke documents skip ho jayenge"
+      },
+      {
+        "en": "Error is logged, but remaining valid documents are still inserted",
+        "hi": "Error log hoga, lekin baaki valid documents insert ho jayenge"
+      },
+      {
+        "en": "The duplicate document overwrites the existing record",
+        "hi": "Duplicate document purane record ko overwrite kar dega"
+      }
+    ],
+    "answerIndex": 2,
+    "explanation": {
+      "en": "With { ordered: false }, MongoDB continues inserting all remaining valid documents in the array even if one fails.",
+      "hi": "ordered: false ke sath kisi ek document ke fail hone par bhi baaki sabhi valid documents insert hote rehte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the core architectural purpose of Insert & Find: Comparison & Logical Operators in the modern full-stack MERN ecosystem?",
+      "hi": "Modern full-stack MERN ecosystem mein Insert & Find: Operators ($gt, $in, $and, $or) ka mukhya architectural maksad kya hota hai?"
+    },
+    "options": [
+      {
+        "en": "It manages physical computer cooling and power supply",
+        "hi": "Ye physical computer cooling aur power supply manage karta hai"
+      },
+      {
+        "en": "It provides structured, robust, and scalable patterns for handling insert & find: comparison & logical operators with high performance and maintainability",
+        "hi": "Ye high performance aur maintainability ke saath Insert & Find: Operators ($gt, $in, $and, $or) ko handle karne ka structured aur scalable pattern provide karta hai"
+      },
+      {
+        "en": "It completely replaces JavaScript with binary machine code in browser tabs",
+        "hi": "Ye browser tabs mein JavaScript ko binary machine code se replace karta hai"
+      },
+      {
+        "en": "It is only used for printing documents to physical printers",
+        "hi": "Ye sirf physical printers par documents print karne ke liye hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Insert & Find: Comparison & Logical Operators establishes clean separation of concerns, ensuring predictable data flow, robust error handling, and optimal runtime performance in production.",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) clean architecture aur separation of concerns deta hai jisse application scalable aur maintainable banti hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What critical development bottleneck or anti-pattern does Insert & Find: Comparison & Logical Operators directly resolve?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) kis critical development bottleneck ya anti-pattern ko seedhe solve karta hai?"
+    },
+    "options": [
+      {
+        "en": "It replaces chaotic, tightly coupled ad-hoc logic with declarative, predictable control flow and structured data contracts",
+        "hi": "Ye chaotic aur tightly coupled logic ko hata kar declarative, predictable flow aur structured data contracts deta hai"
+      },
+      {
+        "en": "It forces the operating system to shut down when errors occur",
+        "hi": "Error aane par ye operating system band kar deta hai"
+      },
+      {
+        "en": "It deletes all database records older than 24 hours automatically",
+        "hi": "Ye 24 ghante purane DB records delete karta hai"
+      },
+      {
+        "en": "It blocks all outgoing HTTP network requests to conserve bandwidth",
+        "hi": "Ye bandwidth bachane ke liye network requests block karta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Without Insert & Find: Comparison & Logical Operators, applications suffer from brittle code, maintenance overhead, and unhandled edge cases that manifest as production crashes.",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) ke bina code brittle ho jata hai aur production mein unexpected errors aate hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When reasoning about Insert & Find: Comparison & Logical Operators, how is its mental model best conceptualized through real-world analogies?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) ko real-world analogies ke zariye kaise best samjha ja sakta hai?"
+    },
+    "options": [
+      {
+        "en": "As a completely offline computer with zero network or database connections",
+        "hi": "Ek offline computer ki tarah jisme koi connection na ho"
+      },
+      {
+        "en": "As a disciplined, coordinated workflow where inputs are validated and processed through standardized checkpoints rather than ad-hoc handling",
+        "hi": "Ek disciplined workflow ki tarah jahan data ko structured checkpoints ke zariye step-by-step process kiya jata hai"
+      },
+      {
+        "en": "As a random number generator with non-deterministic output",
+        "hi": "Random number generator ki tarah jiska koi niyam na ho"
+      },
+      {
+        "en": "As a static text document that cannot be modified or read",
+        "hi": "Static text document jo padha na ja sake"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Real-world workflow analogies help engineers visualize component boundaries, request lifecycles, and data transformations intuitively.",
+      "hi": "Real-world analogies component boundaries aur request lifecycle ko visual aur intuitive banati hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When declaring and implementing Insert & Find: Comparison & Logical Operators, what syntactic convention is essential to prevent runtime errors?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) ko declare aur implement karte waqt kaunsa syntax niyam runtime errors rokne ke liye zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Adhering strictly to required parameters, handling asynchronous promises/callbacks cleanly, and verifying return value types",
+        "hi": "Zaroori parameters sahi pass karna, async promises ko handle karna aur return value types verify karna"
+      },
+      {
+        "en": "Wrapping every line of code inside an eval() execution block",
+        "hi": "Har line ko eval() block mein wrap karna"
+      },
+      {
+        "en": "Omitting import and require statements to reduce file size",
+        "hi": "File size ghatane ke liye import statements hatana"
+      },
+      {
+        "en": "Writing all code on a single continuous line without whitespace",
+        "hi": "Bina whitespace ke single line par code likhna"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Following standard ES6+ syntax contracts and properly handling promise resolution ensures execution safety and eliminates TypeError exceptions.",
+      "hi": "ES6+ syntax aur promise handling ke standard rules follow karne se TypeError aur crashes nahi aate."
+    }
+  },
+  {
+    "question": {
+      "en": "What is a common pitfall developers encounter when working with Insert & Find: Comparison & Logical Operators?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) ke saath kaam karte waqt developers aksar kaunsi aam galati karte hain?"
+    },
+    "options": [
+      {
+        "en": "Writing unit tests before implementing features",
+        "hi": "Feature likhne se pehle unit tests likhna"
+      },
+      {
+        "en": "Failing to handle failure edge cases, mutating shared state directly, or neglecting defensive validation guard clauses",
+        "hi": "Failure edge cases ko handle na karna, shared state direct mutate karna ya validation guard clauses na lagana"
+      },
+      {
+        "en": "Using strict equality checks (===) instead of loose equality (==)",
+        "hi": "Loose equality ke badle strict equality use karna"
+      },
+      {
+        "en": "Writing clear inline code documentation",
+        "hi": "Clear inline code comments likhna"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Neglecting edge cases and error handling causes silent regressions and race conditions that surface under concurrent user workloads.",
+      "hi": "Edge cases aur error handling miss karne se high-traffic production load mein silent bugs paida hote hain."
+    }
+  },
+  {
+    "question": {
+      "en": "According to production best practices, how should Insert & Find: Comparison & Logical Operators be architected for enterprise-grade stability?",
+      "hi": "Production best practices ke mutabiq enterprise-grade stability ke liye Insert & Find: Operators ($gt, $in, $and, $or) ko kaise architect karna chahiye?"
+    },
+    "options": [
+      {
+        "en": "Enforce modular boundaries, validate all incoming payloads against schemas, log structured context, and maintain pure functions where possible",
+        "hi": "Modular boundaries enforce karein, payloads ko schema se validate karein, structured logs rakhein aur pure functions use karein"
+      },
+      {
+        "en": "Hardcode sensitive database connection strings directly in client-side files",
+        "hi": "Database passwords ko client files mein hardcode karna"
+      },
+      {
+        "en": "Disable all linter rules and type warnings globally",
+        "hi": "Linter aur type warnings ko globally disable karna"
+      },
+      {
+        "en": "Store all user session variables in global un-scoped memory arrays",
+        "hi": "Global memory arrays mein sessions store karna"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Enterprise-grade code prioritizes modularity, strict input validation, structured observability, and stateless designs.",
+      "hi": "Production hardening ke liye modular code, schema validation aur observability standard rules hote hain."
+    }
+  },
+  {
+    "question": {
+      "en": "How does proper optimization of Insert & Find: Comparison & Logical Operators impact application memory and CPU consumption?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) ko sahi dhang se optimize karne par application memory aur CPU par kya asar padta hai?"
+    },
+    "options": [
+      {
+        "en": "It increases server CPU temperature to 100 degrees Celsius",
+        "hi": "Server CPU temperature 100 degrees kar deta hai"
+      },
+      {
+        "en": "It minimizes redundant computations, eliminates memory leaks from uncleaned references, and maintains low latency under high concurrency",
+        "hi": "Ye redundant computations ghatata hai, memory leaks khatam karta hai aur high concurrency mein low latency maintain karta hai"
+      },
+      {
+        "en": "It doubles heap RAM allocation unconditionally",
+        "hi": "Heap RAM ko zabardasti double karta hai"
+      },
+      {
+        "en": "Optimization has zero measurable impact in modern web engines",
+        "hi": "Modern web engines par optimization ka koi asar nahi hota"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Preventing unnecessary allocations and cleaning up resources ensures low garbage collection pressure and predictable response times.",
+      "hi": "Memory leak rokne aur unnecessary allocations hatane se Garbage Collector par load kam rehta hai aur response fast rehta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What security principle is non-negotiable when handling data within Insert & Find: Comparison & Logical Operators?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) mein data handle karte waqt kaunsa security principle non-negotiable hota hai?"
+    },
+    "options": [
+      {
+        "en": "Never trust client-supplied input: always sanitize, authenticate, authorize, and validate against strict schemas on the server",
+        "hi": "Client data par blind trust na karein: server par hamesha sanitize, authenticate, authorize aur validate karein"
+      },
+      {
+        "en": "Trust all requests coming from mobile devices or web browsers blindly",
+        "hi": "Mobile ya browser se aane wali requests par blind trust karein"
+      },
+      {
+        "en": "Disable HTTPS and SSL certificates to maximize raw network throughput",
+        "hi": "Network throughput ke liye HTTPS band karein"
+      },
+      {
+        "en": "Expose database admin credentials to all registered users",
+        "hi": "Database admin credentials sabhi users ko expose karein"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Zero-Trust security dictates that every incoming request and data mutation must be validated and authenticated server-side before processing.",
+      "hi": "Zero-Trust security ke mutabiq har incoming mutation ko server par strictly validate aur authenticate kiya jana chahiye."
+    }
+  },
+  {
+    "question": {
+      "en": "How does asynchronous non-blocking execution operate in Insert & Find: Comparison & Logical Operators?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) mein asynchronous non-blocking execution kaise kaam karta hai?"
+    },
+    "options": [
+      {
+        "en": "It freezes the entire operating system until each operation completes",
+        "hi": "Har operation complete hone tak operating system freeze rehta hai"
+      },
+      {
+        "en": "I/O operations return Promises or accept callbacks, delegating work to background threads/queues while the main thread remains free to handle incoming tasks",
+        "hi": "I/O operations Promises return karte hain aur background queues use karke main thread ko baaki requests ke liye free rakhte hain"
+      },
+      {
+        "en": "Async operations execute in reverse alphabetical order automatically",
+        "hi": "Async operations reverse alphabetical order mein chalte hain"
+      },
+      {
+        "en": "Async code only executes when triggered manually by a user click",
+        "hi": "Sirf manual user click par async code chalta hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Non-blocking asynchronous operations resolve via microtasks or event loop queues, ensuring the runtime thread serves concurrent requests smoothly.",
+      "hi": "Non-blocking model main thread ko free rakhta hai taaki server bina rukaawat ke multiple users ko simultaneously serve kar sake."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the recommended pattern for propagating errors that occur in Insert & Find: Comparison & Logical Operators?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) mein error aane par unhe propagate karne ka recommended pattern kya hai?"
+    },
+    "options": [
+      {
+        "en": "Intercepting the error, enriching it with operational context, and delegating to a centralized error handler or error boundary",
+        "hi": "Error ko intercept karna, debug context add karna, aur centralized error handler ya error boundary ko pass karna"
+      },
+      {
+        "en": "Swallowing errors silently with empty catch {} blocks to hide problems from logs",
+        "hi": "Khaali catch {} blocks se errors ko silently daba dena taaki logs mein na dikhein"
+      },
+      {
+        "en": "Shutting down the server machine power immediately",
+        "hi": "Server machine power turant band kar dena"
+      },
+      {
+        "en": "Sending internal raw stack traces and database credentials to end-user browsers",
+        "hi": "Raw stack trace aur DB passwords browser par bhej dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Centralized error propagation provides complete operational observability while shielding internal infrastructure details from end users.",
+      "hi": "Centralized error handling se system mein transparency rehti hai aur user ko clean, safe error messages milte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When authoring unit or integration tests for Insert & Find: Comparison & Logical Operators, what must the test suite assert?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) ke liye automated tests likhte waqt test suite ko kya assert karna zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Only that the JavaScript file can be saved to disk",
+        "hi": "Sirf ye ki file disk par save ho sake"
+      },
+      {
+        "en": "Both the happy path (expected inputs producing valid outputs) AND boundary edge cases (null, empty arrays, network timeouts, invalid types)",
+        "hi": "Happy path (valid data) AUR boundary edge cases (null, empty array, network timeout, invalid types) dono ko verify karna"
+      },
+      {
+        "en": "That the test suite takes at least 24 hours to finish running",
+        "hi": "Test suite ko 24 ghante chalna chahiye"
+      },
+      {
+        "en": "Testing is considered unnecessary in modern full-stack development",
+        "hi": "Modern development mein testing zaroori nahi hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Robust automated test suites verify both standard valid scenarios and defensive failure modes to prevent regressions during deployments.",
+      "hi": "Achhi testing valid inputs aur failure states dono ko assert karti hai taaki production deployments safe rahein."
+    }
+  },
+  {
+    "question": {
+      "en": "How does modular design enhance code maintainability in Insert & Find: Comparison & Logical Operators?",
+      "hi": "Modular design Insert & Find: Operators ($gt, $in, $and, $or) mein code maintainability ko kaise badhata hai?"
+    },
+    "options": [
+      {
+        "en": "By isolating distinct responsibilities into small, reusable, and independently testable units following the Single Responsibility Principle",
+        "hi": "Single Responsibility Principle ke zariye alag-alag kaamo ko chote, reusable aur testable units mein baant kar"
+      },
+      {
+        "en": "By combining all frontend, backend, and database code into a single 50,000-line script",
+        "hi": "Saara code ek hi 50,000-line script mein daal kar"
+      },
+      {
+        "en": "By removing all function names and replacing them with random numbers",
+        "hi": "Function names hata kar random numbers likhna"
+      },
+      {
+        "en": "By forbidding code comments and documentation across the repository",
+        "hi": "Comments aur documentation ban kar dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Modularity reduces cognitive load, simplifies debugging, prevents ripple effects during changes, and enables seamless team collaboration.",
+      "hi": "Modular code se readability badhti hai, debugging aasan hoti hai aur ek jagah badlav karne par doosri jagah bugs nahi aate."
+    }
+  },
+  {
+    "question": {
+      "en": "When application traffic scales 100x, how should Insert & Find: Comparison & Logical Operators be architected to support horizontal scaling?",
+      "hi": "Traffic 100x badhne par Insert & Find: Operators ($gt, $in, $and, $or) ko horizontally scale karne ke liye kya design approach honi chahiye?"
+    },
+    "options": [
+      {
+        "en": "Ensure the component/service is completely stateless, offload shared session/state to Redis/MongoDB, and distribute traffic via a load balancer",
+        "hi": "Service ko completely stateless banayein, shared state ko Redis/DB par shift karein aur load balancer se traffic distribute karein"
+      },
+      {
+        "en": "Store all user session variables in local in-memory JavaScript objects on the web server",
+        "hi": "Server ki local RAM mein session variables store karna"
+      },
+      {
+        "en": "Reboot the production server manually whenever memory usage exceeds 10%",
+        "hi": "Memory 10% cross hote hi server manually reboot karna"
+      },
+      {
+        "en": "Block 95% of incoming users using firewall rules",
+        "hi": "95% users ko firewall se block kar dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Stateless service architecture guarantees that any container instance can handle any incoming request, enabling dynamic auto-scaling without session loss.",
+      "hi": "Stateless architecture auto-scaling ka base hai jahan naye containers bina session loss ke instant traffic handle kar sakte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "In the full-stack MERN paradigm, where does Insert & Find: Comparison & Logical Operators properly belong and execute?",
+      "hi": "Full-stack MERN architecture mein Insert & Find: Operators ($gt, $in, $and, $or) kahan belong karta hai aur kahan execute hota hai?"
+    },
+    "options": [
+      {
+        "en": "In its designated architectural tier (Client browser UI, Express API backend, or MongoDB database) with clean API contracts connecting them",
+        "hi": "Apne designated tier (Browser UI, Express API backend, ya MongoDB) mein clean API contracts ke saath"
+      },
+      {
+        "en": "Directly on the end-user's local router firmware",
+        "hi": "User ke local router firmware par"
+      },
+      {
+        "en": "Inside the computer motherboard BIOS chip",
+        "hi": "Motherboard BIOS chip mein"
+      },
+      {
+        "en": "All MERN code runs strictly inside the MongoDB database engine",
+        "hi": "Saara MERN code sirf MongoDB ke andar chalta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Maintaining clear structural boundaries between client rendering, backend orchestration, and database persistence is the defining trait of MERN.",
+      "hi": "Client UI, backend server aur database ke beech saaf boundary maintain karna MERN architecture ka mukhya niyam hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What telemetry metric or observability signal is most crucial for diagnosing issues with Insert & Find: Comparison & Logical Operators in production?",
+      "hi": "Production mein Insert & Find: Operators ($gt, $in, $and, $or) ki problems diagnose karne ke liye sabse zaroori telemetry metric kaunsi hoti hai?"
+    },
+    "options": [
+      {
+        "en": "The desktop monitor brightness setting of the client",
+        "hi": "Client ke monitor ki brightness"
+      },
+      {
+        "en": "Latency percentiles (p95/p99), error rates (HTTP 4xx/5xx), throughput (RPS), and heap memory allocation deltas",
+        "hi": "Latency percentiles (p95/p99), error rates (4xx/5xx), throughput (RPS), aur heap memory allocation deltas"
+      },
+      {
+        "en": "The number of files in the project's root folder",
+        "hi": "Root folder mein files ki sankhya"
+      },
+      {
+        "en": "The physical keyboard model used by the engineer",
+        "hi": "Engineer ke keyboard ka model"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Observability platforms monitor p95/p99 latencies, error frequencies, and memory utilization to identify bottlenecks and regressions early.",
+      "hi": "p95/p99 latencies aur error rates monitor karne se crashes aane se pehle hi bottlenecks pakad mein aa jaate hain."
+    }
+  },
+  {
+    "question": {
+      "en": "Why is eliminating unintended side effects essential when authoring logic for Insert & Find: Comparison & Logical Operators?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) ka logic likhte waqt unintended side effects ko khatam karna kyun zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Side effects introduce unpredictability, corrupt shared state, cause race conditions, and make concurrent code nearly impossible to debug",
+        "hi": "Side effects se code unpredictable banta hai, shared state corrupt hoti hai aur race conditions create hoti hain"
+      },
+      {
+        "en": "Side effects permanently erase the developer's Git commit history",
+        "hi": "Git history permanently delete ho jaati hai"
+      },
+      {
+        "en": "Side effects are strictly required by the JavaScript ECMAScript standard",
+        "hi": "ECMAScript mein side effects required hain"
+      },
+      {
+        "en": "Side effects make all algorithms execute in O(1) time",
+        "hi": "Saare algorithms O(1) time mein chalte hain"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Pure and predictable logic produces the same output for identical inputs, guaranteeing thread safety, easy caching, and high reliability.",
+      "hi": "Pure logic se shared state safe rehti hai aur same input par hamesha consistent aur predictable output milta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "How should client-side state be kept in sync with backend server mutations in Insert & Find: Comparison & Logical Operators?",
+      "hi": "Insert & Find: Operators ($gt, $in, $and, $or) mein client-side state aur backend server data ko sync mein kaise rakha jata hai?"
+    },
+    "options": [
+      {
+        "en": "By forcing a complete hard page refresh every 3 seconds",
+        "hi": "Har 3 second mein poora page hard refresh karke"
+      },
+      {
+        "en": "Using optimistic UI updates with error rollback, automated query cache invalidation (TanStack Query/RTK), or WebSocket change streams",
+        "hi": "Optimistic UI updates with rollback, automated query cache invalidation ya WebSocket push streams use karke"
+      },
+      {
+        "en": "By disabling all database update operations permanently",
+        "hi": "Database updates ko permanently band karke"
+      },
+      {
+        "en": "By saving user state in local CSV files on the server desktop",
+        "hi": "Server desktop par CSV files save karke"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Modern full-stack architectures synchronize state seamlessly using query cache invalidation, optimistic updates, and real-time socket events.",
+      "hi": "Modern apps cache invalidation aur optimistic UI use karti hain taaki UI bina screen reload ke instantly updated rahe."
+    }
+  }
+],
+};

@@ -1,0 +1,1046 @@
+export default {
+  id: "node-fs-path",
+  title: {
+    en: "Filesystem (fs) & Path Module",
+    hi: "Filesystem (fs/promises) & Path Module",
+  },
+  difficulty: "Beginner",
+  readTime: 11,
+  sections: [
+    {
+      type: "concept",
+      heading: {
+        en: "1. The Filesystem (fs) and Path Modules",
+        hi: "1. Node.js Filesystem (fs) Aur Path Modules Kya Hain?",
+      },
+      body: {
+        en: `In the browser sandbox, JavaScript is strictly forbidden from accessing the user's hard drive for security reasons. Node.js breaks free of this limitation by providing the built-in **\`node:fs\`** and **\`node:path\`** modules.
+
+### The 3 Flavors of the \`fs\` Module:
+Over the years, the \`fs\` module evolved through three distinct paradigms:
+1. **Synchronous Methods (\`fs.readFileSync\`)**: Blocks the entire V8 Call Stack until the disk read finishes. Only acceptable during initial server bootup for reading static configuration files.
+2. **Callback-based Methods (\`fs.readFile(path, cb)\`)**: Legacy Node.js pattern using error-first callbacks.
+3. **Promise-based API (\`fs/promises\`)**: The **modern standard** for MERN developers. Works seamlessly with \`async/await\` without blocking the event loop!
+
+### The \`path\` Module: Cross-Platform File Paths
+Different operating systems use different path separators:
+- **Windows**: Backslash (\`C:\\Users\\Aman\\project\`)
+- **POSIX (Linux, macOS)**: Forward slash (\`/home/aman/project\`)
+
+If you manually concatenate strings like \`dir + "/" + file\`, your code might run on your Mac laptop but crash on Windows! The \`path\` module handles cross-platform path resolution automatically.`,
+        hi: `Browser ke andar security ki wajah se JavaScript ko hard disk chhoone ki permission nahi hoti. Lekin Node.js server-side runtime hai, isliye yeh humein **\`node:fs\`** (Filesystem) aur **\`node:path\`** modules deta hai.
+
+### \`fs\` Module Ke 3 Tareeke:
+1. **Synchronous Methods (\`fs.readFileSync\`)**: Jab tak file read nahi hoti, poore server ko rok kar rakhta hai (blocking). Ise sirf server start hone par use karein, live API mein kabhi nahi.
+2. **Callback-based Methods (\`fs.readFile\`)**: Purana Node.js error-first callback pattern.
+3. **Promise-based API (\`node:fs/promises\`)**: **Modern standard** jo \`async/await\` ke saath chalta hai aur event loop ko bilkul block nahi karta!
+
+### \`path\` Module: Cross-Platform Safety
+Windows backslash (\`\\\`) use karta hai aur Mac/Linux forward slash (\`/\`) use karte hain.
+Agar aap manual string concatenation (\`folder + "/" + file\`) karenge, toh code aapke Mac pe chalega par Windows ya Linux server par crash ho jayega. \`path\` module ise automatically handle karta hai.`,
+      },
+    },
+    {
+      type: "concept",
+      heading: {
+        en: "2. path.join() vs path.resolve() & Path Traversal Security",
+        hi: "2. path.join() vs path.resolve() Aur Path Traversal Security",
+      },
+      body: {
+        en: `A critical interview distinction is understanding how \`path.join\` and \`path.resolve\` process segments:
+
+### \`path.join(...paths)\`
+- Joins all given path segments together using the platform-specific delimiter.
+- Normalizes relative navigators like \`..\` (parent directory) or \`.\` (current directory).
+- Returns a **relative or absolute path**, depending on whether the first argument was relative or absolute.
+
+### \`path.resolve(...paths)\`
+- Processes paths from right to left, prepending until an **absolute path** is constructed.
+- If no absolute path is reached, it automatically prepends the **Current Working Directory** (\`process.cwd()\`).
+- **Always returns an absolute path!**
+
+### Security: Directory Traversal Attacks
+If an API accepts a filename from user query parameters (\`req.query.file\`), a malicious attacker could pass \`"../../etc/passwd"\` to escape your uploads directory and read sensitive server secrets! Always use \`path.resolve\` and verify that the target path starts with the allowed root directory.`,
+        hi: `Interviews mein aksar pucha jata hai:
+
+### \`path.join()\`
+- Saare path segments ko jod kar ek clean path banata hai.
+- \`..\` aur \`.\` ko automatically normalize kar deta hai.
+- Yeh relative ya absolute path de sakta hai (is baat pe depend karta hai ki pehla argument kya tha).
+
+### \`path.resolve()\`
+- Right se Left ki taraf read karta hai jab tak use absolute path na mil jaye.
+- Agar absolute path na mile, toh yeh automatically current folder path (\`process.cwd()\`) jod deta hai.
+- **Yeh HAMESHA ek Absolute Path return karta hai!**
+
+### Directory Traversal Attack Se Bachna:
+Agar user input se file load karte waqt hacker \`"../../etc/passwd"\` bhej de, toh wo aapke server ki secret files chura sakta hai. Hamesha \`path.resolve\` se check karein ki file allowed folder ke bahar na ja rahi ho.`,
+      },
+    },
+    {
+      type: "analogy",
+      heading: {
+        en: "Real-Life Analogy: The District Collector's File Archive",
+        hi: "Real-Life Analogy: Zila Karyalay Ka Sarkari Record Room",
+      },
+      body: {
+        en: `Imagine the **Record Archive Room at a Government District Collectorate**:
+
+- **The Path Module is the Postal Address Format**:
+  - Whether a villager writes the address in Hindi, Marathi, or English, the official postal system requires: \`State / District / Tehsil / Village / House No.\`
+  - \`path.join\` ensures all slashes and spaces align properly regardless of operating system.
+- **The \`fs\` Module is the Record Clerk (Babu)**:
+  - **Synchronous (\`fs.readFileSync\`)**: You stand at the counter and prevent anyone else from being served while the clerk searches dusty shelves for 20 minutes (Entire line freezes!).
+  - **Asynchronous (\`fs/promises\`)**: The clerk stamps your token slip, tells you to wait in the seating hall, and delivers the file folder when retrieved while continuing to serve others!`,
+        hi: `Sochiye sarkari **Zila Karyalay (Collectorate) Ka Record Room**:
+
+- **\`path\` Module Postal Pincode System Jaisa Hai**:
+  - Chahe chithi gaon se aayi ho ya shehar se, post office standard format follow karta hai: \`State / District / Tehsil / Makaan Number\`.
+  - \`path.join\` ensures karta hai ki pata standard tarike se banaya jaye.
+- **\`fs\` Module Record Room Ke Babu Jaisa Hai**:
+  - **Sync (\`readFileSync\`)**: Aap window par khade hokar babu ko bhejte ho aur jab tak babu 15 minute baad file nahi lata, line ke baaki 50 log intezaar karte hain (Server Freeze).
+  - **Async (\`fs/promises\`)**: Babu aapka token stamp karta hai, aapko aaram se baithne ko kehta hai, aur file aane par aapko bula leta hai bina kisi ko roke!`,
+      },
+    },
+    {
+      type: "syntax",
+      heading: {
+        en: "4. Modern fs/promises & path Syntax Cheatsheet",
+        hi: "4. Modern fs/promises Aur path Ka Syntax",
+      },
+      body: {
+        en: `\`\`\`javascript
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+// 1. Reading Files
+const content = await fs.readFile('/path/to/file.txt', 'utf-8');
+
+// 2. Writing & Appending
+await fs.writeFile('/path/to/output.json', JSON.stringify(data, null, 2), 'utf-8');
+await fs.appendFile('/path/to/log.txt', \`[\${new Date().toISOString()}] User login\\n\`);
+
+// 3. Creating Directories (recursively like mkdir -p)
+await fs.mkdir('/path/to/nested/folder', { recursive: true });
+
+// 4. Checking existence (modern way)
+try {
+  await fs.access('/path/to/file.txt');
+  console.log("File exists!");
+} catch {
+  console.log("File does not exist.");
+}
+
+// 5. Path utility helpers
+path.basename('/users/docs/resume.pdf'); // 'resume.pdf'
+path.extname('/users/docs/resume.pdf');  // '.pdf'
+path.parse('/users/docs/resume.pdf');    // { root, dir, base, ext, name }
+\`\`\``,
+        hi: `\`\`\`javascript
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
+// 1. File Read Karna
+const text = await fs.readFile('data.txt', 'utf-8');
+
+// 2. File Write & Append Karna
+await fs.writeFile('output.json', JSON.stringify(data), 'utf-8');
+await fs.appendFile('server.log', 'New log line\\n');
+
+// 3. Nested Folder Banana (mkdir -p)
+await fs.mkdir('uploads/users/avatars', { recursive: true });
+
+// 4. File Exist Karti Hai Ya Nahi Check Karna
+try {
+  await fs.access('file.txt');
+  console.log("File mil gayi!");
+} catch {
+  console.log("File nahi mili!");
+}
+
+// 5. Path Helpers
+path.extname('photo.png'); // '.png'
+path.basename('photo.png'); // 'photo.png'
+\`\`\``,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "5. Practical Examples: CRUD on Disk, Path Resolution & Recursive Scanner",
+        hi: "5. Practical Examples: Disk CRUD, Path Resolution aur Recursive Scanner",
+      },
+      body: {
+        en: `### Example 1: Robust Asynchronous File Operations with fs/promises
+Safe reading, writing, appending, and deleting of JSON application state.`,
+        hi: `### Example 1: fs/promises Ke Saath Asynchronous File CRUD
+JSON data ko safely hard disk par save karna aur read karna.`,
+      },
+      code: {
+        language: "javascript",
+        filename: "fileCrudOperations.js",
+        snippet: `// Example 1: File CRUD with async/await
+import fs from "node:fs/promises";
+import path from "node:path";
+
+async function manageApplicationState() {
+  const filePath = path.join(process.cwd(), "temp-storage", "userSettings.json");
+  const dirPath = path.dirname(filePath);
+
+  try {
+    // 1. Ensure target directory exists (recursive: true acts like 'mkdir -p')
+    await fs.mkdir(dirPath, { recursive: true });
+    console.log("Target directory verified:", dirPath);
+
+    // 2. Write initial JSON data
+    const initialSettings = { theme: "dark", language: "hi", notifications: true };
+    await fs.writeFile(filePath, JSON.stringify(initialSettings, null, 2), "utf-8");
+    console.log("Initial settings saved to disk.");
+
+    // 3. Read and parse file
+    const rawData = await fs.readFile(filePath, "utf-8");
+    const parsedData = JSON.parse(rawData);
+    console.log("Loaded Settings:", parsedData);
+
+    // 4. Update and overwrite
+    parsedData.theme = "system";
+    await fs.writeFile(filePath, JSON.stringify(parsedData, null, 2), "utf-8");
+    console.log("Updated settings successfully written!");
+
+    // 5. Cleanup
+    await fs.unlink(filePath);
+    console.log("Temporary file removed.");
+  } catch (error) {
+    console.error("Filesystem operation failed:", error.message);
+  }
+}
+
+manageApplicationState();`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 2: path.join vs path.resolve Deep Comparison",
+        hi: "Example 2: path.join Aur path.resolve Ka Direct Live Output",
+      },
+      body: {
+        en: `### Example 2: Understanding Path Manipulations
+Shows how path.join and path.resolve treat relative navigators, absolute roots, and working directories.`,
+        hi: `### Example 2: path.join Aur path.resolve Ka Detailed Comparison
+Dekhiye kaise \`path.resolve\` hamesha root directory se absolute path banata hai.`,
+      },
+      code: {
+        language: "javascript",
+        filename: "pathComparison.js",
+        snippet: `// Example 2: path.join vs path.resolve
+import path from "node:path";
+
+console.log("Current Working Directory (CWD):", process.cwd());
+
+// 1. path.join: Simply glues segments together
+const joinedPath = path.join("users", "aman", "..", "rahul", "photos", "pic.jpg");
+console.log("\\npath.join output (normalized):");
+console.log(joinedPath); // "users/rahul/photos/pic.jpg"
+
+// 2. path.resolve: Builds an absolute path from right to left
+const resolvedPath = path.resolve("users", "rahul", "photos", "pic.jpg");
+console.log("\\npath.resolve output (guaranteed absolute):");
+console.log(resolvedPath); // "/Users/aman/Desktop/Learn/little/users/rahul/photos/pic.jpg"
+
+// 3. Inspecting a path with path.parse()
+const fileMetadata = path.parse(resolvedPath);
+console.log("\\nPath Metadata Parsed Object:");
+console.log({
+  root: fileMetadata.root,
+  dir: fileMetadata.dir,
+  base: fileMetadata.base,
+  name: fileMetadata.name,
+  ext: fileMetadata.ext
+});`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 3: Real-World Recursive Directory File Searcher",
+        hi: "Example 3: Production Recursive Directory Scanner (File Finder)",
+      },
+      body: {
+        en: `### Example 3: Searching Files Recursively with Directory Traversal
+A utility that walks through nested directories to discover all files matching a specific extension (e.g. finding all configuration files).`,
+        hi: `### Example 3: Recursive File Scanner Utility
+Nested folders ke andar ghoom kar specific extension (jaise .json) ki sabhi files ko find karne ka function.`,
+      },
+      code: {
+        language: "javascript",
+        filename: "findFilesRecursively.js",
+        snippet: `// Example 3: Recursive Directory Walker
+import fs from "node:fs/promises";
+import path from "node:path";
+
+async function findFilesByExtension(dirPath, targetExtension = ".json") {
+  let matchedFiles = [];
+
+  try {
+    // Read directory entries as Dirent objects (withFileTypes: true prevents extra stat calls)
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        // Recurse into nested subfolder
+        const subFiles = await findFilesByExtension(fullPath, targetExtension);
+        matchedFiles = matchedFiles.concat(subFiles);
+      } else if (entry.isFile() && path.extname(entry.name) === targetExtension) {
+        matchedFiles.push(fullPath);
+      }
+    }
+  } catch (error) {
+    console.error(\`Failed to scan directory \${dirPath}:\`, error.message);
+  }
+
+  return matchedFiles;
+}
+
+// Running search on project root
+findFilesByExtension(process.cwd(), ".json")
+  .then(files => console.log("Found JSON files:", files));`,
+      },
+    },
+    {
+      type: "mistakes",
+      heading: {
+        en: "6. Common Mistakes in File & Path Handling",
+        hi: "6. Filesystem Aur Paths Mein Hone Wali Galtiyan",
+      },
+      mistakes: [
+        {
+          mistake: {
+            en: "Using synchronous fs methods (e.g. readFileSync) inside Express API route handlers.",
+            hi: "Express API routes ke andar `fs.readFileSync` use karna.",
+          },
+          correction: {
+            en: "Synchronous methods block the entire Node.js main thread. If a file takes 100ms to read from disk, zero other HTTP requests can be accepted during that time. Always use `fs.promises.readFile()`.",
+            hi: "Sync methods single thread ko block kar dete hain. Jab tak file read hogi, kisi doosre user ki API request process nahi hogi. Hamesha `await fs.promises.readFile()` use karein.",
+          },
+          code: `// FATAL ANTI-PATTERN in Express:
+app.get('/report', (req, res) => {
+  const data = fs.readFileSync('heavy.pdf'); // Server frozen!
+  res.send(data);
+});
+
+// CORRECT ASYNC PATTERN:
+app.get('/report', async (req, res) => {
+  const data = await fs.promises.readFile('heavy.pdf');
+  res.send(data);
+});`,
+        },
+        {
+          mistake: {
+            en: "Using `fs.exists()` to check if a file exists before reading it (Race Condition).",
+            hi: "File read karne se pehle `fs.exists()` check karna (Race Condition Bug).",
+          },
+          correction: {
+            en: "`fs.exists()` is deprecated because another process could delete the file between the check and the read (Time-of-Check to Time-of-Use bug). Instead, attempt to read the file directly and handle the ENOENT error in a `try...catch` block.",
+            hi: "`fs.exists()` deprecated hai kyunki check karne aur read karne ke beech koi doosra process file delete kar sakta hai. Direct read karein aur `try...catch` se error handle karein.",
+          },
+          code: `// BAD:
+// if (await fs.exists(path)) { await fs.readFile(path); }
+
+// GOOD:
+try {
+  const data = await fs.readFile(path, 'utf-8');
+} catch (err) {
+  if (err.code === 'ENOENT') console.log('File not found!');
+}`,
+        },
+      ],
+    },
+    {
+      type: "summary",
+      heading: {
+        en: "7. Production Best Practices for Filesystems",
+        hi: "7. Production Filesystem Best Practices",
+      },
+      body: {
+        en: `- **Always pass encoding**: When reading text files, always pass \`'utf-8'\` (e.g. \`fs.readFile(path, 'utf-8')\`); otherwise, Node returns a raw binary \`Buffer\`.
+- **Use Streams for Large Files**: For files larger than 10 MB (videos, large CSVs), do not use \`fs.readFile\` (which buffers the entire file into RAM); use \`fs.createReadStream\` instead.
+- **Sanitize Paths**: Prevent Path Traversal by resolving user input paths and validating that \`resolvedPath.startsWith(allowedUploadsDirectory)\`.`,
+        hi: `- **Encoding Hamesha Mention Karein**: Text files read karte waqt \`'utf-8'\` zaroor likhein, warna Node binary Buffer return karta hai.
+- **Badi Files Ke Liye Streams Use Karein**: 10MB se badi files ko \`fs.readFile\` se na padhein warna RAM bhar jayegi. \`fs.createReadStream\` ka use karein.
+- **Path Traversal Se Bachein**: User input paths ko resolve karke verify karein ki path uploads folder ke andar hi hai.`,
+      },
+    },
+    {
+      type: "interview",
+      heading: {
+        en: "8. Top Interview Questions & Answers",
+        hi: "8. Top Interview Sawal Aur Jawab",
+      },
+      questions: [
+        {
+          q: {
+            en: "What is the key difference between path.join() and path.resolve()?",
+            hi: "path.join() aur path.resolve() mein kya mukhya antar hai?",
+          },
+          a: {
+            en: "path.join() concatenates all path segments together using the platform's delimiter and normalizes relative operators (like .. and .); it returns a relative or absolute path depending on input. path.resolve() resolves from right to left until an absolute path is formed; if none is reached, it prepends the current working directory, ALWAYS returning an absolute path.",
+            hi: "path.join() saare segments ko normalize karke jod deta hai aur input ke hisab se relative ya absolute path return karta hai. Jabki path.resolve() hamesha current working directory jod kar ek 100% Guaranteed Absolute Path return karta hai.",
+          },
+        },
+        {
+          q: {
+            en: "Why should you never use `fs.readFileSync` inside an Express route handler?",
+            hi: "Express route handler ke andar `fs.readFileSync` use kyun nahi karna chahiye?",
+          },
+          a: {
+            en: "Because Node.js executes JavaScript on a single thread. Synchronous methods block the Call Stack during the entire disk I/O duration. While the server is reading that file synchronously, all other incoming client HTTP requests are completely blocked from being processed.",
+            hi: "Kyunki Node.js ka JavaScript engine single-threaded hota hai. Sync method call karne se Call Stack tab tak block rehta hai jab tak hard disk file deliver na kar de. Is dauran doosre users ki requests server par freeze ho jaati hain.",
+          },
+        },
+        {
+          q: {
+            en: "What is the meaning of the `ENOENT` error code in Node.js?",
+            hi: "Node.js mein `ENOENT` error code ka kya matlab hota hai?",
+          },
+          a: {
+            en: "ENOENT stands for 'Error NO ENTry' (or No such file or directory). It is thrown by the operating system when an operation attempts to open, read, or access a file or folder path that does not exist on disk.",
+            hi: "ENOENT ka full form hai 'Error No Entry' (No such file or directory). Yeh error tab aati hai jab code kisi aisi file ya folder ko access karne ki koshish karta hai jo hard disk par exist nahi karti.",
+          },
+        },
+      ],
+    },
+    {
+      type: "summary",
+      heading: {
+        en: "9. Summary Cheatsheet",
+        hi: "9. Summary Cheatsheet",
+      },
+      body: {
+        en: `- **Modern standard**: \`import fs from 'node:fs/promises'\`.
+- **Always specify encoding**: \`await fs.readFile(path, 'utf-8')\`.
+- **path.join**: Normalizes and concatenates segments.
+- **path.resolve**: Always constructs an absolute path from CWD.
+- **mkdir flag**: Use \`{ recursive: true }\` to emulate \`mkdir -p\`.`,
+        hi: `- **Standard**: \`import fs from 'node:fs/promises'\`.
+- **Encoding**: Hamesha \`'utf-8'\` specify karein.
+- **path.join**: Segments jodta hai.
+- **path.resolve**: Guaranteed Absolute path banata hai.
+- **mkdir**: Nested folders ke liye \`{ recursive: true }\` lagayein.`,
+      },
+    },
+  ],
+  quiz: [
+  {
+    "q": {
+      "en": "Which method in the path module is guaranteed to ALWAYS return an absolute path?",
+      "hi": "path module ka kaunsa method hamesha ek Absolute Path return karne ki guarantee deta hai?"
+    },
+    "options": [
+      {
+        "en": "path.resolve()",
+        "hi": "path.resolve()"
+      },
+      {
+        "en": "path.join()",
+        "hi": "path.join()"
+      },
+      {
+        "en": "path.normalize()",
+        "hi": "path.normalize()"
+      },
+      {
+        "en": "path.format()",
+        "hi": "path.format()"
+      }
+    ],
+    "answerIndex": 0,
+    "explanation": {
+      "en": "path.resolve() always prepends the current working directory if an absolute path is not supplied, guaranteeing an absolute path result.",
+      "hi": "path.resolve() agar absolute na mile toh current working directory jod kar hamesha absolute path banata hai."
+    }
+  },
+  {
+    "q": {
+      "en": "What does the option `{ recursive: true }` accomplish in `fs.mkdir(dir, { recursive: true })`?",
+      "hi": "`fs.mkdir(dir, { recursive: true })` mein `{ recursive: true }` ka kya kaam hota hai?"
+    },
+    "options": [
+      {
+        "en": "It creates any missing parent directories in the path without throwing an error if they already exist",
+        "hi": "Yeh path ke missing parent folders ko automatically bana deta hai aur folder pehle se hone par crash nahi hota"
+      },
+      {
+        "en": "It continuously deletes and recreates the folder",
+        "hi": "Yeh folder ko delete karke dobara banata hai"
+      },
+      {
+        "en": "It grants read/write permissions to all users",
+        "hi": "Yeh sabhi users ko permissions deta hai"
+      },
+      {
+        "en": "It compresses the directory using gzip",
+        "hi": "Yeh directory ko gzip se compress karta hai"
+      }
+    ],
+    "answerIndex": 0,
+    "explanation": {
+      "en": "Recursive mkdir behaves like bash 'mkdir -p', creating all necessary intermediate parent directories safely.",
+      "hi": "Yeh Linux ke 'mkdir -p' ki tarah intermediate parent directories ko bina kisi error ke bana deta hai."
+    }
+  },
+  {
+    "q": {
+      "en": "If you call `fs.readFile('data.txt')` without passing 'utf-8' as an encoding, what does it return?",
+      "hi": "Agar `fs.readFile('data.txt')` bina 'utf-8' encoding ke call kiya jaye, toh wo kya return karta hai?"
+    },
+    "options": [
+      {
+        "en": "A raw binary Buffer object",
+        "hi": "Ek raw binary Buffer object"
+      },
+      {
+        "en": "A plain string",
+        "hi": "Ek normal string"
+      },
+      {
+        "en": "An array of ASCII numbers",
+        "hi": "ASCII numbers ka array"
+      },
+      {
+        "en": "A parsed JSON object",
+        "hi": "Parsed JSON object"
+      }
+    ],
+    "answerIndex": 0,
+    "explanation": {
+      "en": "Without an encoding specified, Node.js returns a raw binary Buffer containing byte data.",
+      "hi": "Agar encoding na di jaye, toh Node.js raw binary Buffer return karta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the core architectural purpose of Filesystem (fs) & Path Module in the modern full-stack MERN ecosystem?",
+      "hi": "Modern full-stack MERN ecosystem mein Filesystem (fs/promises) & Path Module ka mukhya architectural maksad kya hota hai?"
+    },
+    "options": [
+      {
+        "en": "It manages physical computer cooling and power supply",
+        "hi": "Ye physical computer cooling aur power supply manage karta hai"
+      },
+      {
+        "en": "It provides structured, robust, and scalable patterns for handling filesystem (fs) & path module with high performance and maintainability",
+        "hi": "Ye high performance aur maintainability ke saath Filesystem (fs/promises) & Path Module ko handle karne ka structured aur scalable pattern provide karta hai"
+      },
+      {
+        "en": "It completely replaces JavaScript with binary machine code in browser tabs",
+        "hi": "Ye browser tabs mein JavaScript ko binary machine code se replace karta hai"
+      },
+      {
+        "en": "It is only used for printing documents to physical printers",
+        "hi": "Ye sirf physical printers par documents print karne ke liye hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Filesystem (fs) & Path Module establishes clean separation of concerns, ensuring predictable data flow, robust error handling, and optimal runtime performance in production.",
+      "hi": "Filesystem (fs/promises) & Path Module clean architecture aur separation of concerns deta hai jisse application scalable aur maintainable banti hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What critical development bottleneck or anti-pattern does Filesystem (fs) & Path Module directly resolve?",
+      "hi": "Filesystem (fs/promises) & Path Module kis critical development bottleneck ya anti-pattern ko seedhe solve karta hai?"
+    },
+    "options": [
+      {
+        "en": "It replaces chaotic, tightly coupled ad-hoc logic with declarative, predictable control flow and structured data contracts",
+        "hi": "Ye chaotic aur tightly coupled logic ko hata kar declarative, predictable flow aur structured data contracts deta hai"
+      },
+      {
+        "en": "It forces the operating system to shut down when errors occur",
+        "hi": "Error aane par ye operating system band kar deta hai"
+      },
+      {
+        "en": "It deletes all database records older than 24 hours automatically",
+        "hi": "Ye 24 ghante purane DB records delete karta hai"
+      },
+      {
+        "en": "It blocks all outgoing HTTP network requests to conserve bandwidth",
+        "hi": "Ye bandwidth bachane ke liye network requests block karta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Without Filesystem (fs) & Path Module, applications suffer from brittle code, maintenance overhead, and unhandled edge cases that manifest as production crashes.",
+      "hi": "Filesystem (fs/promises) & Path Module ke bina code brittle ho jata hai aur production mein unexpected errors aate hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When reasoning about Filesystem (fs) & Path Module, how is its mental model best conceptualized through real-world analogies?",
+      "hi": "Filesystem (fs/promises) & Path Module ko real-world analogies ke zariye kaise best samjha ja sakta hai?"
+    },
+    "options": [
+      {
+        "en": "As a completely offline computer with zero network or database connections",
+        "hi": "Ek offline computer ki tarah jisme koi connection na ho"
+      },
+      {
+        "en": "As a disciplined, coordinated workflow where inputs are validated and processed through standardized checkpoints rather than ad-hoc handling",
+        "hi": "Ek disciplined workflow ki tarah jahan data ko structured checkpoints ke zariye step-by-step process kiya jata hai"
+      },
+      {
+        "en": "As a random number generator with non-deterministic output",
+        "hi": "Random number generator ki tarah jiska koi niyam na ho"
+      },
+      {
+        "en": "As a static text document that cannot be modified or read",
+        "hi": "Static text document jo padha na ja sake"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Real-world workflow analogies help engineers visualize component boundaries, request lifecycles, and data transformations intuitively.",
+      "hi": "Real-world analogies component boundaries aur request lifecycle ko visual aur intuitive banati hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When declaring and implementing Filesystem (fs) & Path Module, what syntactic convention is essential to prevent runtime errors?",
+      "hi": "Filesystem (fs/promises) & Path Module ko declare aur implement karte waqt kaunsa syntax niyam runtime errors rokne ke liye zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Adhering strictly to required parameters, handling asynchronous promises/callbacks cleanly, and verifying return value types",
+        "hi": "Zaroori parameters sahi pass karna, async promises ko handle karna aur return value types verify karna"
+      },
+      {
+        "en": "Wrapping every line of code inside an eval() execution block",
+        "hi": "Har line ko eval() block mein wrap karna"
+      },
+      {
+        "en": "Omitting import and require statements to reduce file size",
+        "hi": "File size ghatane ke liye import statements hatana"
+      },
+      {
+        "en": "Writing all code on a single continuous line without whitespace",
+        "hi": "Bina whitespace ke single line par code likhna"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Following standard ES6+ syntax contracts and properly handling promise resolution ensures execution safety and eliminates TypeError exceptions.",
+      "hi": "ES6+ syntax aur promise handling ke standard rules follow karne se TypeError aur crashes nahi aate."
+    }
+  },
+  {
+    "question": {
+      "en": "What is a common pitfall developers encounter when working with Filesystem (fs) & Path Module?",
+      "hi": "Filesystem (fs/promises) & Path Module ke saath kaam karte waqt developers aksar kaunsi aam galati karte hain?"
+    },
+    "options": [
+      {
+        "en": "Writing unit tests before implementing features",
+        "hi": "Feature likhne se pehle unit tests likhna"
+      },
+      {
+        "en": "Failing to handle failure edge cases, mutating shared state directly, or neglecting defensive validation guard clauses",
+        "hi": "Failure edge cases ko handle na karna, shared state direct mutate karna ya validation guard clauses na lagana"
+      },
+      {
+        "en": "Using strict equality checks (===) instead of loose equality (==)",
+        "hi": "Loose equality ke badle strict equality use karna"
+      },
+      {
+        "en": "Writing clear inline code documentation",
+        "hi": "Clear inline code comments likhna"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Neglecting edge cases and error handling causes silent regressions and race conditions that surface under concurrent user workloads.",
+      "hi": "Edge cases aur error handling miss karne se high-traffic production load mein silent bugs paida hote hain."
+    }
+  },
+  {
+    "question": {
+      "en": "According to production best practices, how should Filesystem (fs) & Path Module be architected for enterprise-grade stability?",
+      "hi": "Production best practices ke mutabiq enterprise-grade stability ke liye Filesystem (fs/promises) & Path Module ko kaise architect karna chahiye?"
+    },
+    "options": [
+      {
+        "en": "Enforce modular boundaries, validate all incoming payloads against schemas, log structured context, and maintain pure functions where possible",
+        "hi": "Modular boundaries enforce karein, payloads ko schema se validate karein, structured logs rakhein aur pure functions use karein"
+      },
+      {
+        "en": "Hardcode sensitive database connection strings directly in client-side files",
+        "hi": "Database passwords ko client files mein hardcode karna"
+      },
+      {
+        "en": "Disable all linter rules and type warnings globally",
+        "hi": "Linter aur type warnings ko globally disable karna"
+      },
+      {
+        "en": "Store all user session variables in global un-scoped memory arrays",
+        "hi": "Global memory arrays mein sessions store karna"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Enterprise-grade code prioritizes modularity, strict input validation, structured observability, and stateless designs.",
+      "hi": "Production hardening ke liye modular code, schema validation aur observability standard rules hote hain."
+    }
+  },
+  {
+    "question": {
+      "en": "How does proper optimization of Filesystem (fs) & Path Module impact application memory and CPU consumption?",
+      "hi": "Filesystem (fs/promises) & Path Module ko sahi dhang se optimize karne par application memory aur CPU par kya asar padta hai?"
+    },
+    "options": [
+      {
+        "en": "It increases server CPU temperature to 100 degrees Celsius",
+        "hi": "Server CPU temperature 100 degrees kar deta hai"
+      },
+      {
+        "en": "It minimizes redundant computations, eliminates memory leaks from uncleaned references, and maintains low latency under high concurrency",
+        "hi": "Ye redundant computations ghatata hai, memory leaks khatam karta hai aur high concurrency mein low latency maintain karta hai"
+      },
+      {
+        "en": "It doubles heap RAM allocation unconditionally",
+        "hi": "Heap RAM ko zabardasti double karta hai"
+      },
+      {
+        "en": "Optimization has zero measurable impact in modern web engines",
+        "hi": "Modern web engines par optimization ka koi asar nahi hota"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Preventing unnecessary allocations and cleaning up resources ensures low garbage collection pressure and predictable response times.",
+      "hi": "Memory leak rokne aur unnecessary allocations hatane se Garbage Collector par load kam rehta hai aur response fast rehta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What security principle is non-negotiable when handling data within Filesystem (fs) & Path Module?",
+      "hi": "Filesystem (fs/promises) & Path Module mein data handle karte waqt kaunsa security principle non-negotiable hota hai?"
+    },
+    "options": [
+      {
+        "en": "Never trust client-supplied input: always sanitize, authenticate, authorize, and validate against strict schemas on the server",
+        "hi": "Client data par blind trust na karein: server par hamesha sanitize, authenticate, authorize aur validate karein"
+      },
+      {
+        "en": "Trust all requests coming from mobile devices or web browsers blindly",
+        "hi": "Mobile ya browser se aane wali requests par blind trust karein"
+      },
+      {
+        "en": "Disable HTTPS and SSL certificates to maximize raw network throughput",
+        "hi": "Network throughput ke liye HTTPS band karein"
+      },
+      {
+        "en": "Expose database admin credentials to all registered users",
+        "hi": "Database admin credentials sabhi users ko expose karein"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Zero-Trust security dictates that every incoming request and data mutation must be validated and authenticated server-side before processing.",
+      "hi": "Zero-Trust security ke mutabiq har incoming mutation ko server par strictly validate aur authenticate kiya jana chahiye."
+    }
+  },
+  {
+    "question": {
+      "en": "How does asynchronous non-blocking execution operate in Filesystem (fs) & Path Module?",
+      "hi": "Filesystem (fs/promises) & Path Module mein asynchronous non-blocking execution kaise kaam karta hai?"
+    },
+    "options": [
+      {
+        "en": "It freezes the entire operating system until each operation completes",
+        "hi": "Har operation complete hone tak operating system freeze rehta hai"
+      },
+      {
+        "en": "I/O operations return Promises or accept callbacks, delegating work to background threads/queues while the main thread remains free to handle incoming tasks",
+        "hi": "I/O operations Promises return karte hain aur background queues use karke main thread ko baaki requests ke liye free rakhte hain"
+      },
+      {
+        "en": "Async operations execute in reverse alphabetical order automatically",
+        "hi": "Async operations reverse alphabetical order mein chalte hain"
+      },
+      {
+        "en": "Async code only executes when triggered manually by a user click",
+        "hi": "Sirf manual user click par async code chalta hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Non-blocking asynchronous operations resolve via microtasks or event loop queues, ensuring the runtime thread serves concurrent requests smoothly.",
+      "hi": "Non-blocking model main thread ko free rakhta hai taaki server bina rukaawat ke multiple users ko simultaneously serve kar sake."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the recommended pattern for propagating errors that occur in Filesystem (fs) & Path Module?",
+      "hi": "Filesystem (fs/promises) & Path Module mein error aane par unhe propagate karne ka recommended pattern kya hai?"
+    },
+    "options": [
+      {
+        "en": "Intercepting the error, enriching it with operational context, and delegating to a centralized error handler or error boundary",
+        "hi": "Error ko intercept karna, debug context add karna, aur centralized error handler ya error boundary ko pass karna"
+      },
+      {
+        "en": "Swallowing errors silently with empty catch {} blocks to hide problems from logs",
+        "hi": "Khaali catch {} blocks se errors ko silently daba dena taaki logs mein na dikhein"
+      },
+      {
+        "en": "Shutting down the server machine power immediately",
+        "hi": "Server machine power turant band kar dena"
+      },
+      {
+        "en": "Sending internal raw stack traces and database credentials to end-user browsers",
+        "hi": "Raw stack trace aur DB passwords browser par bhej dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Centralized error propagation provides complete operational observability while shielding internal infrastructure details from end users.",
+      "hi": "Centralized error handling se system mein transparency rehti hai aur user ko clean, safe error messages milte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When authoring unit or integration tests for Filesystem (fs) & Path Module, what must the test suite assert?",
+      "hi": "Filesystem (fs/promises) & Path Module ke liye automated tests likhte waqt test suite ko kya assert karna zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Only that the JavaScript file can be saved to disk",
+        "hi": "Sirf ye ki file disk par save ho sake"
+      },
+      {
+        "en": "Both the happy path (expected inputs producing valid outputs) AND boundary edge cases (null, empty arrays, network timeouts, invalid types)",
+        "hi": "Happy path (valid data) AUR boundary edge cases (null, empty array, network timeout, invalid types) dono ko verify karna"
+      },
+      {
+        "en": "That the test suite takes at least 24 hours to finish running",
+        "hi": "Test suite ko 24 ghante chalna chahiye"
+      },
+      {
+        "en": "Testing is considered unnecessary in modern full-stack development",
+        "hi": "Modern development mein testing zaroori nahi hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Robust automated test suites verify both standard valid scenarios and defensive failure modes to prevent regressions during deployments.",
+      "hi": "Achhi testing valid inputs aur failure states dono ko assert karti hai taaki production deployments safe rahein."
+    }
+  },
+  {
+    "question": {
+      "en": "How does modular design enhance code maintainability in Filesystem (fs) & Path Module?",
+      "hi": "Modular design Filesystem (fs/promises) & Path Module mein code maintainability ko kaise badhata hai?"
+    },
+    "options": [
+      {
+        "en": "By isolating distinct responsibilities into small, reusable, and independently testable units following the Single Responsibility Principle",
+        "hi": "Single Responsibility Principle ke zariye alag-alag kaamo ko chote, reusable aur testable units mein baant kar"
+      },
+      {
+        "en": "By combining all frontend, backend, and database code into a single 50,000-line script",
+        "hi": "Saara code ek hi 50,000-line script mein daal kar"
+      },
+      {
+        "en": "By removing all function names and replacing them with random numbers",
+        "hi": "Function names hata kar random numbers likhna"
+      },
+      {
+        "en": "By forbidding code comments and documentation across the repository",
+        "hi": "Comments aur documentation ban kar dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Modularity reduces cognitive load, simplifies debugging, prevents ripple effects during changes, and enables seamless team collaboration.",
+      "hi": "Modular code se readability badhti hai, debugging aasan hoti hai aur ek jagah badlav karne par doosri jagah bugs nahi aate."
+    }
+  },
+  {
+    "question": {
+      "en": "When application traffic scales 100x, how should Filesystem (fs) & Path Module be architected to support horizontal scaling?",
+      "hi": "Traffic 100x badhne par Filesystem (fs/promises) & Path Module ko horizontally scale karne ke liye kya design approach honi chahiye?"
+    },
+    "options": [
+      {
+        "en": "Ensure the component/service is completely stateless, offload shared session/state to Redis/MongoDB, and distribute traffic via a load balancer",
+        "hi": "Service ko completely stateless banayein, shared state ko Redis/DB par shift karein aur load balancer se traffic distribute karein"
+      },
+      {
+        "en": "Store all user session variables in local in-memory JavaScript objects on the web server",
+        "hi": "Server ki local RAM mein session variables store karna"
+      },
+      {
+        "en": "Reboot the production server manually whenever memory usage exceeds 10%",
+        "hi": "Memory 10% cross hote hi server manually reboot karna"
+      },
+      {
+        "en": "Block 95% of incoming users using firewall rules",
+        "hi": "95% users ko firewall se block kar dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Stateless service architecture guarantees that any container instance can handle any incoming request, enabling dynamic auto-scaling without session loss.",
+      "hi": "Stateless architecture auto-scaling ka base hai jahan naye containers bina session loss ke instant traffic handle kar sakte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "In the full-stack MERN paradigm, where does Filesystem (fs) & Path Module properly belong and execute?",
+      "hi": "Full-stack MERN architecture mein Filesystem (fs/promises) & Path Module kahan belong karta hai aur kahan execute hota hai?"
+    },
+    "options": [
+      {
+        "en": "In its designated architectural tier (Client browser UI, Express API backend, or MongoDB database) with clean API contracts connecting them",
+        "hi": "Apne designated tier (Browser UI, Express API backend, ya MongoDB) mein clean API contracts ke saath"
+      },
+      {
+        "en": "Directly on the end-user's local router firmware",
+        "hi": "User ke local router firmware par"
+      },
+      {
+        "en": "Inside the computer motherboard BIOS chip",
+        "hi": "Motherboard BIOS chip mein"
+      },
+      {
+        "en": "All MERN code runs strictly inside the MongoDB database engine",
+        "hi": "Saara MERN code sirf MongoDB ke andar chalta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Maintaining clear structural boundaries between client rendering, backend orchestration, and database persistence is the defining trait of MERN.",
+      "hi": "Client UI, backend server aur database ke beech saaf boundary maintain karna MERN architecture ka mukhya niyam hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What telemetry metric or observability signal is most crucial for diagnosing issues with Filesystem (fs) & Path Module in production?",
+      "hi": "Production mein Filesystem (fs/promises) & Path Module ki problems diagnose karne ke liye sabse zaroori telemetry metric kaunsi hoti hai?"
+    },
+    "options": [
+      {
+        "en": "The desktop monitor brightness setting of the client",
+        "hi": "Client ke monitor ki brightness"
+      },
+      {
+        "en": "Latency percentiles (p95/p99), error rates (HTTP 4xx/5xx), throughput (RPS), and heap memory allocation deltas",
+        "hi": "Latency percentiles (p95/p99), error rates (4xx/5xx), throughput (RPS), aur heap memory allocation deltas"
+      },
+      {
+        "en": "The number of files in the project's root folder",
+        "hi": "Root folder mein files ki sankhya"
+      },
+      {
+        "en": "The physical keyboard model used by the engineer",
+        "hi": "Engineer ke keyboard ka model"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Observability platforms monitor p95/p99 latencies, error frequencies, and memory utilization to identify bottlenecks and regressions early.",
+      "hi": "p95/p99 latencies aur error rates monitor karne se crashes aane se pehle hi bottlenecks pakad mein aa jaate hain."
+    }
+  },
+  {
+    "question": {
+      "en": "Why is eliminating unintended side effects essential when authoring logic for Filesystem (fs) & Path Module?",
+      "hi": "Filesystem (fs/promises) & Path Module ka logic likhte waqt unintended side effects ko khatam karna kyun zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Side effects introduce unpredictability, corrupt shared state, cause race conditions, and make concurrent code nearly impossible to debug",
+        "hi": "Side effects se code unpredictable banta hai, shared state corrupt hoti hai aur race conditions create hoti hain"
+      },
+      {
+        "en": "Side effects permanently erase the developer's Git commit history",
+        "hi": "Git history permanently delete ho jaati hai"
+      },
+      {
+        "en": "Side effects are strictly required by the JavaScript ECMAScript standard",
+        "hi": "ECMAScript mein side effects required hain"
+      },
+      {
+        "en": "Side effects make all algorithms execute in O(1) time",
+        "hi": "Saare algorithms O(1) time mein chalte hain"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Pure and predictable logic produces the same output for identical inputs, guaranteeing thread safety, easy caching, and high reliability.",
+      "hi": "Pure logic se shared state safe rehti hai aur same input par hamesha consistent aur predictable output milta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "How should client-side state be kept in sync with backend server mutations in Filesystem (fs) & Path Module?",
+      "hi": "Filesystem (fs/promises) & Path Module mein client-side state aur backend server data ko sync mein kaise rakha jata hai?"
+    },
+    "options": [
+      {
+        "en": "By forcing a complete hard page refresh every 3 seconds",
+        "hi": "Har 3 second mein poora page hard refresh karke"
+      },
+      {
+        "en": "Using optimistic UI updates with error rollback, automated query cache invalidation (TanStack Query/RTK), or WebSocket change streams",
+        "hi": "Optimistic UI updates with rollback, automated query cache invalidation ya WebSocket push streams use karke"
+      },
+      {
+        "en": "By disabling all database update operations permanently",
+        "hi": "Database updates ko permanently band karke"
+      },
+      {
+        "en": "By saving user state in local CSV files on the server desktop",
+        "hi": "Server desktop par CSV files save karke"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Modern full-stack architectures synchronize state seamlessly using query cache invalidation, optimistic updates, and real-time socket events.",
+      "hi": "Modern apps cache invalidation aur optimistic UI use karti hain taaki UI bina screen reload ke instantly updated rahe."
+    }
+  },
+  {
+    "question": {
+      "en": "Why is thorough resource cleanup (clearing timers, closing sockets, aborting in-flight requests) critical in Filesystem (fs) & Path Module?",
+      "hi": "Filesystem (fs/promises) & Path Module mein resource cleanup (timers clear karna, sockets band karna, network abort karna) kyun zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "To prevent memory leaks where unreachable or orphaned objects remain retained in heap memory, causing gradual performance degradation and crashes",
+        "hi": "Memory leaks rokne ke liye taaki unneeded objects RAM mein jama na hon aur server crash na ho"
+      },
+      {
+        "en": "To delete the client's local disk partition",
+        "hi": "Client ka local disk partition delete karne ke liye"
+      },
+      {
+        "en": "Because JavaScript engines allow only 5 variables in RAM",
+        "hi": "JS engine sirf 5 variables allow karta hai"
+      },
+      {
+        "en": "Cleanup is unnecessary because garbage collection handles 100% of event listeners automatically",
+        "hi": "Cleanup ki zaroorat nahi hoti"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Unclosed connections and dangling event listeners create references that prevent garbage collection, leading to severe memory leaks over time.",
+      "hi": "Dangling listeners aur unclosed connections memory leaks banate hain jo V8 heap ko exhaust karke process crash kar dete hain."
+    }
+  }
+],
+};

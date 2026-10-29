@@ -1,0 +1,1069 @@
+export default {
+  id: "mongo-mongoose-hooks",
+  title: {
+    en: "Mongoose Middleware: Pre & Post Hooks",
+    hi: "Mongoose Middleware: Pre & Post Hooks (Password Hashing)",
+  },
+  difficulty: "Intermediate",
+  readTime: 12,
+  sections: [
+    {
+      type: "concept",
+      heading: {
+        en: "1. The Anatomy of Mongoose Middleware (Hooks)",
+        hi: "1. Mongoose Middleware (Hooks) Ka Concept",
+      },
+      body: {
+        en: `Just as Express middleware intercepts incoming HTTP requests before they reach route handlers, **Mongoose Middleware (also called Hooks)** intercepts document lifecycle events (validation, saving, querying, deleting) before or after execution in MongoDB.
+
+### Types of Mongoose Middleware:
+1. **Document Middleware**: \`this\` refers to the **document instance** being manipulated.
+   - Triggers: \`init\`, \`validate\`, \`save\`, \`deleteOne\` (document-level).
+   - *Example*: \`schema.pre('save', function() { ... })\`
+2. **Query Middleware**: \`this\` refers to the **query object**, not the document!
+   - Triggers: \`find\`, \`findOne\`, \`findOneAndUpdate\`, \`deleteMany\`, \`countDocuments\`.
+   - *Example*: \`schema.pre('find', function() { ... })\`
+3. **Aggregate Middleware**: \`this\` refers to the aggregation pipeline array.
+4. **Model Middleware**: \`this\` refers to the Model constructor.
+
+### Pre Hooks vs Post Hooks:
+- **Pre Hooks (\`pre\`)**: Run **before** the database operation executes. Used for data sanitation, auto-generating slugs, checking business logic, or hashing passwords.
+- **Post Hooks (\`post\`)**: Run **after** the database operation has successfully completed. Used for sending notification emails, logging audit records, or invalidating Redis caches.`,
+        hi: `Jaise Express middleware HTTP requests ko route handler tak pahunchne se pehle intercept karta hai, waise hi **Mongoose Middleware (Hooks)** database operations (save, find, update, delete) ke hone se pehle ya baad mein business logic chalane ke kaam aata hai.
+
+### Mongoose Middleware Ke Prakaar:
+1. **Document Middleware**: Yahan \`this\` us **document instance** ko point karta hai jo save ho raha hai.
+   - Operations: \`validate\`, \`save\`, \`deleteOne\`.
+   - *Example*: Password hash karne ke liye \`schema.pre('save', function() { ... })\`.
+2. **Query Middleware**: Yahan \`this\` document nahi balki **query object** hota hai!
+   - Operations: \`find\`, \`findOne\`, \`findOneAndUpdate\`.
+   - *Example*: Saari queries mein automatically soft delete filter lagana.
+3. **Aggregate Middleware**: \`this\` aggregation pipeline array ko point karta hai.
+
+### Pre Hooks vs Post Hooks:
+- **Pre Hooks (\`pre\`)**: Database mein data likhne se **pehle** chalte hain (jaise password hash karna ya slug generate karna).
+- **Post Hooks (\`post\`)**: Data save hone ke **baad** chalte hain (jaise welcome email bhejna ya logs likhna).`,
+      },
+    },
+    {
+      type: "concept",
+      heading: {
+        en: "2. The Password Hashing Lifecycle & isModified() Check",
+        hi: "2. Password Hashing Lifecycle Aur isModified() Ki Ahmiyat",
+      },
+      body: {
+        en: `The single most common real-world use case for Mongoose document middleware is **password hashing with bcrypt**.
+
+### The isModified() Guard:
+When a user updates their profile (for example, changing their display name or phone number), Mongoose fires the \`pre('save')\` hook.
+If you blindly hash \`this.password\` on every save:
+- The already-hashed bcrypt string (e.g. \`$2b$12$e8F...\`) will be **re-hashed** into a completely new hash of a hash!
+- The user will never be able to log in with their plain password again!
+
+\`\`\`javascript
+userSchema.pre("save", async function() {
+  // CRITICAL GUARD: Only hash the password if it has been modified or is new!
+  if (!this.isModified("password")) return;
+
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+\`\`\``,
+        hi: `Real-world production backend mein Mongoose middleware ka sabse zaroori use **bcrypt se password hash karna** hota hai.
+
+### \`isModified()\` Guard Ki Zaroorat:
+Jab user apna naam ya phone number update karta hai aur \`user.save()\` chalta hai, toh Mongoose ka \`pre('save')\` hook trigger hota hai.
+Agar aapne bina check kiye har baar password hash kar diya:
+- Toh purana hashed password dobara hash ho jayega (hash ka hash ban jayega)!
+- User apne original plain password se dobara kabhi login nahi kar payega!
+
+\`\`\`javascript
+userSchema.pre("save", async function() {
+  // Sabse zaroori check: Password sirf tab hash karein jab woh badla ho!
+  if (!this.isModified("password")) return;
+
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+\`\`\``,
+      },
+    },
+    {
+      type: "analogy",
+      heading: {
+        en: "Real-Life Analogy: Airport Security Check & Baggage Claim SMS",
+        hi: "Real-Life Analogy: Airport Security Check Aur Flight Land Hone Ka SMS",
+      },
+      body: {
+        en: `Think of boarding a domestic flight from Mumbai to Delhi:
+
+- **Pre-Save Hook (Security Check at Airport Gate)**:
+  - Before any passenger is permitted to board the physical aircraft, they must pass through CISF Security Frisking.
+  - The officer scans your handbag. If you are carrying a sharp pair of scissors, they confiscate it (**data sanitization**).
+  - They stamp your boarding pass (**data enrichment / hashing**).
+  - If a passenger fails security inspection, they are turned away immediately; they never touch the airplane (**aborting the save operation**).
+- **Post-Save Hook (Arrival SMS & Welcome Drink)**:
+  - Once the aircraft safely lands in Delhi and passengers step off the ramp, the airline triggers an automated SMS: *"Welcome to Delhi! Your luggage is arriving on Belt 4"*.
+  - The flight has already arrived; the SMS is purely a side-effect notification (**post-hook notification / audit logging**).`,
+        hi: `Domestic flight se safar karne ke process se samjhein:
+
+- **Pre-Save Hook (CISF Security Frisking Gate)**:
+  - Flight mein chadhne se pehle har yatri ko security check se guzarna padta hai.
+  - Officer bag check karta hai; agar koi prohibited cheez hai toh use nikaal deta hai (**data sanitization**).
+  - Boarding pass par seal lagai jaati hai (**password hashing / data modification**).
+  - Agar security clear nahi hui toh yatri ko wapas bhej diya jata hai, flight tak data nahi pahunchta (**aborted save**).
+- **Post-Save Hook (Flight Landing Ka SMS)**:
+  - Jab flight surakshit Delhi land ho jaati hai, tab airline aapko SMS bhejti hai: *"Delhi mein aapka swagat hai, luggage belt no. 4 par aayega"*.
+  - Flight pehle hi land ho chuki hai; yeh SMS ek side-effect notification hai (**post-hook email / audit log**).`,
+      },
+    },
+    {
+      type: "syntax",
+      heading: {
+        en: "Syntax & Hook Signatures: Async/Await in Mongoose 8+",
+        hi: "Syntax & Signatures: Modern Mongoose 8+ Async Hooks",
+      },
+      body: {
+        en: `### Document Pre & Post Hooks:
+\`\`\`javascript
+// Document Pre Hook (Do NOT use arrow functions!)
+userSchema.pre("save", async function() {
+  if (this.isModified("email")) {
+    this.email = this.email.toLowerCase().trim();
+  }
+});
+
+// Document Post Hook
+userSchema.post("save", function(doc, next) {
+  console.log(\`Document with ID \${doc._id} saved successfully.\`);
+  next();
+});
+
+// Query Pre Hook (Automatically filter out soft-deleted docs)
+userSchema.pre(/^find/, function() {
+  // 'this' is the Query object
+  this.where({ isDeleted: { $ne: true } });
+});
+\`\`\``,
+        hi: `### Pre Aur Post Hooks Ka Syntax:
+\`\`\`javascript
+// Document Pre Hook (Arrow function use na karein!)
+userSchema.pre("save", async function() {
+  if (this.isModified("email")) {
+    this.email = this.email.toLowerCase().trim();
+  }
+});
+
+// Document Post Hook (Save hone ke baad)
+userSchema.post("save", function(doc, next) {
+  console.log(\`User \${doc.name} successfully save ho gaya.\`);
+  next();
+});
+
+// Query Pre Hook (Saari find queries par soft-delete filter lagana)
+userSchema.pre(/^find/, function() {
+  // 'this' query object hota hai
+  this.where({ isDeleted: { $ne: true } });
+});
+\`\`\``,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 1: Production User Password Hashing with Bcrypt",
+        hi: "Example 1: Bcrypt Ke Sath Production User Password Hashing Hook",
+      },
+      body: {
+        en: `Implementing pre-save password hashing and an instance method for verifying passwords during user login.`,
+        hi: `\`pre('save')\` hook mein bcrypt se password hash karna aur password verify karne ka instance method.`,
+      },
+      code: {
+        language: "javascript",
+        filename: "user-auth-hooks.js",
+        snippet: `import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true, minlength: 8, select: false },
+    passwordChangedAt: Date
+  },
+  { timestamps: true }
+);
+
+// 1. Pre-Save Hook: Hashes password before writing to MongoDB
+userSchema.pre("save", async function() {
+  // Only hash password if it was actually modified (or created new)
+  if (!this.isModified("password")) return;
+
+  // Salt factor: 12 provides enterprise-grade brute force protection
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
+
+  // If this is an existing user updating their password, record timestamp
+  if (!this.isNew) {
+    this.passwordChangedAt = new Date(Date.now() - 1000); // 1s in past ensures token issued after
+  }
+});
+
+// 2. Instance Method: Verify plain password against hashed password
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  // 'this.password' requires that password was selected in the query
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+export const User = mongoose.model("UserAuth", userSchema);`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 2: Query Middleware for Universal Soft-Delete Filtering",
+        hi: "Example 2: Universal Soft Delete Ke Liye Query Middleware",
+      },
+      body: {
+        en: `Using regex query middleware (\`pre(/^find/)\`) to automatically intercept and exclude soft-deleted records from \`find\`, \`findOne\`, \`findOneAndUpdate\`, and \`countDocuments\`.`,
+        hi: `Regex query middleware se sabhi \`find\` queries mein automatically \`isDeleted: false\` condition lagana.`,
+      },
+      code: {
+        language: "javascript",
+        filename: "soft-delete-middleware.js",
+        snippet: `import mongoose from "mongoose";
+
+const articleSchema = new mongoose.Schema({
+  title: String,
+  content: String,
+  author: String,
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: Date
+});
+
+// Query Middleware: Intercepts find, findOne, findById, findOneAndUpdate, etc.
+// Regex /^find/ matches all methods starting with 'find'
+articleSchema.pre(/^find/, function() {
+  // 'this' refers to the Mongoose Query
+  // Silently appends condition: isDeleted != true
+  this.where({ isDeleted: { $ne: true } });
+});
+
+export const Article = mongoose.model("Article", articleSchema);
+
+// Demonstration Test
+async function testSoftDelete() {
+  await mongoose.connect("mongodb://127.0.0.1:27017/softDeleteTestDB");
+  await Article.deleteMany({});
+
+  // Insert 2 articles
+  const a1 = await Article.create({ title: "Public Article", content: "Active..." });
+  const a2 = await Article.create({ title: "Banned Article", content: "Spam...", isDeleted: true });
+
+  console.log("Database has 2 documents (1 active, 1 soft-deleted).");
+
+  // Query: Normal find() call
+  const visibleArticles = await Article.find();
+  console.log("Visible Articles (auto-filtered by query hook):", visibleArticles.map(a => a.title));
+
+  // FindById on soft-deleted item returns null automatically!
+  const deletedItem = await Article.findById(a2._id);
+  console.log("Direct findById on soft-deleted doc:", deletedItem); // null
+
+  await mongoose.disconnect();
+}
+
+testSoftDelete().catch(console.error);
+
+/*
+Expected Output:
+Database has 2 documents (1 active, 1 soft-deleted).
+Visible Articles (auto-filtered by query hook): [ 'Public Article' ]
+Direct findById on soft-deleted doc: null
+*/`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 3: Post-Save Hook for Audit Logging & Email Notifications",
+        hi: "Example 3: Post-Save Hook Se Audit Log Aur Notification Bhejna",
+      },
+      body: {
+        en: `Using a post-save hook to dispatch an event to an external logging service or message queue only after the document is safely persisted on disk.`,
+        hi: `Document ke database mein commit hone ke baad post-save hook se audit log record karna.`,
+      },
+      code: {
+        language: "javascript",
+        filename: "post-save-audit-hook.js",
+        snippet: `import mongoose from "mongoose";
+
+const orderSchema = new mongoose.Schema({
+  orderNumber: String,
+  customerEmail: String,
+  amount: Number,
+  status: { type: String, default: "pending" }
+});
+
+// Post-Save Hook: Triggers AFTER database write is confirmed
+orderSchema.post("save", function(doc) {
+  // 'doc' is the fully saved Mongoose document
+  console.log(\`[AUDIT LOG] Order \${doc.orderNumber} for ₹\${doc.amount} confirmed on disk at \${new Date().toISOString()}.\`);
+  
+  // Trigger non-blocking external notification (e.g., SendGrid email or AWS SQS message)
+  sendConfirmationEmail(doc.customerEmail, doc.orderNumber).catch(console.error);
+});
+
+async function sendConfirmationEmail(email, orderNum) {
+  // Simulated external email service
+  console.log(\`[EMAIL SERVICE] Sent order receipt for #\${orderNum} to \${email}\`);
+}
+
+export const Order = mongoose.model("OrderAudit", orderSchema);
+
+// Test Runner
+async function run() {
+  await mongoose.connect("mongodb://127.0.0.1:27017/postHookTestDB");
+  await Order.deleteMany({});
+
+  console.log("Creating new order...");
+  await Order.create({
+    orderNumber: "ORD-5542",
+    customerEmail: "customer@example.com",
+    amount: 4999
+  });
+
+  await mongoose.disconnect();
+}
+
+run().catch(console.error);
+
+/*
+Expected Output:
+Creating new order...
+[AUDIT LOG] Order ORD-5542 for ₹4999 confirmed on disk at ...
+[EMAIL SERVICE] Sent order receipt for #ORD-5542 to customer@example.com
+*/`,
+      },
+    },
+    {
+      type: "mistakes",
+      heading: {
+        en: "Common Mistakes & How to Fix Them",
+        hi: "Aam Galatiyan Aur Unka Solution",
+      },
+      body: {
+        en: `### 1. Forgetting \`if (!this.isModified('password')) return;\`
+- **Mistake**: When a user updates their name or bio via \`user.save()\`, omitting the \`isModified\` check causes bcrypt to hash the already-hashed password string. The original password is permanently lost!
+- **Fix**: Always prepend your hashing logic with \`if (!this.isModified('password')) return;\`.
+
+### 2. Using Arrow Functions for Middleware
+- **Mistake**: Writing \`schema.pre('save', async () => { this.password = ... })\`. Arrow functions do not bind their own \`this\`. \`this\` will evaluate to \`undefined\` or global context, throwing a TypeError!
+- **Fix**: Always use standard function expressions: \`schema.pre('save', async function() { ... })\`.
+
+### 3. Mixing \`next()\` with \`async/await\`
+- **Mistake**: Writing \`schema.pre('save', async function(next) { await doAsyncWork(); next(); })\`. In Mongoose, returning a Promise AND calling \`next()\` can trigger double execution bugs.
+- **Fix**: In modern Mongoose, if your function is \`async\`, omit the \`next\` parameter entirely and simply \`return\`.
+
+### 4. Expecting \`pre('save')\` to Fire on \`findByIdAndUpdate()\`
+- **Mistake**: Expecting password hashing or pre-save hooks to run when calling \`User.findByIdAndUpdate(id, { password: 'new' })\`. \`findByIdAndUpdate\` is a direct MongoDB query command and **does NOT fire document \`pre('save')\` hooks**!
+- **Fix**: Either fetch the document and call \`user.password = 'new'; await user.save();\`, or use query middleware (\`pre('findOneAndUpdate')\`).`,
+        hi: `### 1. \`isModified('password')\` Check Na Lagana
+- **Galati**: User ka naam update hone par bhi password re-hash ho jana. Purana hash dobara hash ban jata hai aur user kabhi login nahi kar pata.
+- **Solution**: Hamesha check karein: \`if (!this.isModified('password')) return;\`.
+
+### 2. Middleware Mein Arrow Function Ka Use Karna
+- **Galati**: \`schema.pre('save', async () => { ... })\` likhna. Arrow function mein \`this\` document ko point nahi karta aur \`TypeError: Cannot read properties of undefined\` aata hai.
+- **Solution**: Hamesha regular function use karein: \`async function() { ... }\`.
+
+### 3. \`next()\` Aur \`async/await\` Ko Mix Karna
+- **Galati**: \`async function(next)\` mein \`await\` bhi karna aur aakhir mein \`next()\` bhi call karna. Isse double execution bugs aate hain.
+- **Solution**: Modern Mongoose mein async function se \`next\` parameter hata dein aur seedhe \`return\` karein.
+
+### 4. \`findByIdAndUpdate()\` Par \`pre('save')\` Chalne Ki Ummeed Karna
+- **Galati**: \`findByIdAndUpdate()\` se password update karna aur sochna ki hash ho jayega. Update queries par document hooks (\`pre('save')\`) trigger **nahi hote**!
+- **Solution**: Pehle document dhoondein: \`const user = await User.findById(id); user.password = 'new'; await user.save();\`.`,
+      },
+    },
+    {
+      type: "tip",
+      heading: {
+        en: "Best Practices: Middleware Patterns",
+        hi: "Best Practices: Mongoose Middleware",
+      },
+      body: {
+        en: `1. **Always Use Async/Await Without \`next\`**: In Mongoose 7+, define hooks as \`schema.pre('save', async function() { ... })\`. Returning a rejected promise automatically propagates errors to the caller.
+2. **Handle Password Hashing Only in Document \`save()\`**: Avoid trying to hash passwords inside \`pre('findOneAndUpdate')\` because accessing \`this.isModified\` is difficult on raw query objects. Keep password changes on \`document.save()\`.
+3. **Use Query Middleware for Multi-Tenancy**: Automatically inject tenant filters: \`schema.pre(/^find/, function() { if (currentTenantId) this.where({ tenantId: currentTenantId }); })\`.
+4. **Keep Post Hooks Non-Blocking**: Post hooks for sending emails or generating invoices should never block the user HTTP response. Run them asynchronously in the background.`,
+        hi: `1. **Bina \`next\` Ke Async/Await Use Karein**: Modern Mongoose mein hooks ko \`async function()\` banayein taaki clean error handling ho sake.
+2. **Password Updates Hamesha \`save()\` Se Karein**: \`findOneAndUpdate\` ke bajaye password updates \`user.save()\` se karein taaki \`isModified\` aur \`pre('save')\` properly trigger ho sakein.
+3. **Multi-Tenancy Ke Liye Query Middleware**: Query hook mein automatically \`tenantId\` ya \`isDeleted: false\` inject kar dein taaki har controller mein dobara na likhna pade.
+4. **Post Hooks Ko Non-Blocking Rakhein**: Email bhejne jaise heavy operations ko background mein chalayein taaki API response slow na ho.`,
+      },
+    },
+    {
+      type: "interview",
+      heading: {
+        en: "Top Interview Questions & Answers",
+        hi: "Top Interview Sawaal Aur Jawab",
+      },
+      body: {
+        en: `### Q1: What is the difference between Document Middleware and Query Middleware in Mongoose?
+**Answer**:
+- **Document Middleware**: \`this\` refers to the actual Mongoose Document instance (e.g. \`pre('save')\`, \`pre('validate')\`). You have direct access to document properties (\`this.name\`, \`this.isModified()\`).
+- **Query Middleware**: \`this\` refers to the Mongoose Query object (e.g. \`pre('find')\`, \`pre('findOneAndUpdate')\`). The document has not been fetched yet! You can inspect or modify query conditions using \`this.getFilter()\` and \`this.where()\`.
+
+### Q2: Why will User.findByIdAndUpdate(id, { password: 'newPassword' }) fail to hash the password if you only have a pre('save') hook?
+**Answer**:
+Because \`findByIdAndUpdate()\` is a direct MongoDB query command; it maps to the underlying MongoDB \`findOneAndUpdate\` driver command without ever creating a Mongoose document instance. Therefore, document lifecycle hooks like \`pre('save')\` are never invoked. To ensure hashing, you must retrieve the document via \`findById\`, update the property, and call \`.save()\`.
+
+### Q3: What is the purpose of this.isModified('fieldName') in a pre-save hook?
+**Answer**:
+\`this.isModified('fieldName')\` checks if the specific field was modified since the document was initialized from the database, or if the document is brand new. In password hashing hooks, it ensures that already-hashed passwords are not re-hashed when unrelated fields (such as name or email) are updated.`,
+        hi: `### Q1: Document Middleware aur Query Middleware mein kya antar hai?
+**Jawab**:
+- **Document Middleware**: \`this\` seedhe us document instance ko point karta hai (jaise \`pre('save')\`). Aap \`this.email\` aur \`this.isModified()\` access kar sakte hain.
+- **Query Middleware**: \`this\` document nahi balki Mongoose Query object hota hai (jaise \`pre('find')\`). Document abhi database se aaya hi nahi hota, aap \`this.where()\` se query conditions badal sakte hain.
+
+### Q2: Agar sirf \`pre('save')\` hook laga ho, toh \`findByIdAndUpdate()\` se password hash kyun nahi hota?
+**Jawab**:
+Kyunki \`findByIdAndUpdate()\` seedhe MongoDB server par query bhejta hai aur Mongoose document instance nahi banata. Isliye document-level ke \`pre('save')\` hooks trigger hi nahi hote. Password hash karne ke liye \`findById\` karke \`.save()\` chalana zaroori hai.
+
+### Q3: Pre-save hook mein \`this.isModified()\` ka kya kaam hai?
+**Jawab**:
+\`this.isModified('field')\` check karta hai ki kya woh field naya hai ya modify hua hai. Password hashing mein yeh check lagane se user ka profile (naam/phone) update hone par purana password dobara bekaar mein re-hash nahi hota.`,
+      },
+    },
+    {
+      type: "summary",
+      heading: {
+        en: "Quick Summary: Mongoose Middleware",
+        hi: "Quick Summary: Mongoose Middleware",
+      },
+      body: {
+        en: `- **Document Hooks**: \`this\` is the document; triggers on \`validate\`, \`save\`, and \`deleteOne\`.
+- **Query Hooks**: \`this\` is the query; triggers on \`find\`, \`findOne\`, \`findOneAndUpdate\`.
+- **Password Hashing Rule**: Always check \`if (!this.isModified('password')) return;\` before hashing.
+- **Do NOT use Arrow Functions**: Arrow functions do not bind \`this\`, breaking document access.
+- **Use Async/Await**: Omit \`next\` and return promises in modern Mongoose hooks.`,
+        hi: `- **Document Hooks**: \`this\` document hota hai; \`validate\`, \`save\` par trigger hota hai.
+- **Query Hooks**: \`this\` query object hota hai; \`find\`, \`findOneAndUpdate\` par trigger hota hai.
+- **Password Hashing Rule**: Hashing se pehle \`if (!this.isModified('password')) return;\` zaroor check karein.
+- **Arrow Functions Use Na Karein**: Arrow function mein \`this\` undefined ho jata hai.
+- **Modern Async/Await**: Modern Mongoose hooks mein \`next\` ke bina simple \`async/await\` use karein.`,
+      },
+    },
+  ],
+  quiz: [
+  {
+    "q": {
+      "en": "Why is userSchema.pre('save', () => { this.password = ... }) broken in Mongoose?",
+      "hi": "Mongoose mein userSchema.pre('save', () => { this.password = ... }) mein kya gadbad hai?"
+    },
+    "options": [
+      {
+        "en": "Pre-hooks cannot modify properties",
+        "hi": "Pre-hooks properties modify nahi kar sakte"
+      },
+      {
+        "en": "Arrow functions lexically bind 'this', so 'this' does not point to the document instance",
+        "hi": "Arrow function mein 'this' document instance ko point nahi karta"
+      },
+      {
+        "en": "Mongoose only supports post hooks",
+        "hi": "Mongoose sirf post hooks support karta hai"
+      },
+      {
+        "en": "The save method is synchronous",
+        "hi": "Save method synchronous hota hai"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "Mongoose relies on standard function binding to set 'this' to the document being saved. Arrow functions prevent dynamic 'this' binding.",
+      "hi": "Mongoose 'this' ko document instance se bind karta hai. Arrow function use karne par 'this' undefined ho jata hai."
+    }
+  },
+  {
+    "q": {
+      "en": "What happens if you do NOT check !this.isModified('password') in a pre('save') password hashing hook?",
+      "hi": "Agar aap pre('save') hashing hook mein !this.isModified('password') check na karein toh kya hoga?"
+    },
+    "options": [
+      {
+        "en": "The database will throw an index violation error",
+        "hi": "Database index error dega"
+      },
+      {
+        "en": "Every time unrelated fields (e.g. name, email) are updated via .save(), the hashed password will be re-hashed, corrupting user logins",
+        "hi": "Har baar koi aur field update hone par bhi hashed password dobara hash ho jayega aur login corrupt ho jayega"
+      },
+      {
+        "en": "The password field will be completely deleted",
+        "hi": "Password field delete ho jayega"
+      },
+      {
+        "en": "Nothing, bcrypt automatically detects existing hashes",
+        "hi": "Kuch nahi hoga"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "Bcrypt will treat the existing hash as plain text and hash it again, making it impossible for the user to ever authenticate with their original password.",
+      "hi": "Bcrypt purane hash ko hi plain text samajh kar dobara hash kar dega, jisse user apne password se dobara login nahi kar sakega."
+    }
+  },
+  {
+    "q": {
+      "en": "Which Mongoose method does NOT trigger document pre('save') hooks?",
+      "hi": "Inme se kaunsa Mongoose method document ke pre('save') hooks ko trigger NAHI karta?"
+    },
+    "options": [
+      {
+        "en": "new User(...).save()",
+        "hi": "new User(...).save()"
+      },
+      {
+        "en": "User.create(...)",
+        "hi": "User.create(...)"
+      },
+      {
+        "en": "User.findByIdAndUpdate(...)",
+        "hi": "User.findByIdAndUpdate(...)"
+      },
+      {
+        "en": "document.save()",
+        "hi": "document.save()"
+      }
+    ],
+    "answerIndex": 2,
+    "explanation": {
+      "en": "findByIdAndUpdate is a direct query command; it executes at the MongoDB driver layer without instantiating a document, completely bypassing pre('save') hooks.",
+      "hi": "findByIdAndUpdate ek direct query operation hai jo bina document instance banaye chalta hai, isliye pre('save') hook trigger nahi hota."
+    }
+  },
+  {
+    "q": {
+      "en": "In a query middleware like schema.pre(/^find/, function() { ... }), what does 'this' point to?",
+      "hi": "Query middleware schema.pre(/^find/, function() { ... }) ke andar 'this' kis cheez ko point karta hai?"
+    },
+    "options": [
+      {
+        "en": "The single document result from the database",
+        "hi": "Database se aaya hua single document"
+      },
+      {
+        "en": "The Mongoose Query object being executed",
+        "hi": "Execute ho raha Mongoose Query object"
+      },
+      {
+        "en": "The Node.js global process object",
+        "hi": "Global process object"
+      },
+      {
+        "en": "The Express req object",
+        "hi": "Express req object"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "In query middleware, 'this' refers to the Mongoose Query object, allowing you to manipulate filter criteria using this.where() before execution.",
+      "hi": "Query middleware ke andar 'this' Mongoose Query object hota hai, jisse aap execution se pehle filter conditions badal sakte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the core architectural purpose of Mongoose Middleware: Pre & Post Hooks in the modern full-stack MERN ecosystem?",
+      "hi": "Modern full-stack MERN ecosystem mein Mongoose Middleware: Pre & Post Hooks (Password Hashing) ka mukhya architectural maksad kya hota hai?"
+    },
+    "options": [
+      {
+        "en": "It manages physical computer cooling and power supply",
+        "hi": "Ye physical computer cooling aur power supply manage karta hai"
+      },
+      {
+        "en": "It provides structured, robust, and scalable patterns for handling mongoose middleware: pre & post hooks with high performance and maintainability",
+        "hi": "Ye high performance aur maintainability ke saath Mongoose Middleware: Pre & Post Hooks (Password Hashing) ko handle karne ka structured aur scalable pattern provide karta hai"
+      },
+      {
+        "en": "It completely replaces JavaScript with binary machine code in browser tabs",
+        "hi": "Ye browser tabs mein JavaScript ko binary machine code se replace karta hai"
+      },
+      {
+        "en": "It is only used for printing documents to physical printers",
+        "hi": "Ye sirf physical printers par documents print karne ke liye hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Mongoose Middleware: Pre & Post Hooks establishes clean separation of concerns, ensuring predictable data flow, robust error handling, and optimal runtime performance in production.",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) clean architecture aur separation of concerns deta hai jisse application scalable aur maintainable banti hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What critical development bottleneck or anti-pattern does Mongoose Middleware: Pre & Post Hooks directly resolve?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) kis critical development bottleneck ya anti-pattern ko seedhe solve karta hai?"
+    },
+    "options": [
+      {
+        "en": "It replaces chaotic, tightly coupled ad-hoc logic with declarative, predictable control flow and structured data contracts",
+        "hi": "Ye chaotic aur tightly coupled logic ko hata kar declarative, predictable flow aur structured data contracts deta hai"
+      },
+      {
+        "en": "It forces the operating system to shut down when errors occur",
+        "hi": "Error aane par ye operating system band kar deta hai"
+      },
+      {
+        "en": "It deletes all database records older than 24 hours automatically",
+        "hi": "Ye 24 ghante purane DB records delete karta hai"
+      },
+      {
+        "en": "It blocks all outgoing HTTP network requests to conserve bandwidth",
+        "hi": "Ye bandwidth bachane ke liye network requests block karta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Without Mongoose Middleware: Pre & Post Hooks, applications suffer from brittle code, maintenance overhead, and unhandled edge cases that manifest as production crashes.",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) ke bina code brittle ho jata hai aur production mein unexpected errors aate hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When reasoning about Mongoose Middleware: Pre & Post Hooks, how is its mental model best conceptualized through real-world analogies?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) ko real-world analogies ke zariye kaise best samjha ja sakta hai?"
+    },
+    "options": [
+      {
+        "en": "As a completely offline computer with zero network or database connections",
+        "hi": "Ek offline computer ki tarah jisme koi connection na ho"
+      },
+      {
+        "en": "As a disciplined, coordinated workflow where inputs are validated and processed through standardized checkpoints rather than ad-hoc handling",
+        "hi": "Ek disciplined workflow ki tarah jahan data ko structured checkpoints ke zariye step-by-step process kiya jata hai"
+      },
+      {
+        "en": "As a random number generator with non-deterministic output",
+        "hi": "Random number generator ki tarah jiska koi niyam na ho"
+      },
+      {
+        "en": "As a static text document that cannot be modified or read",
+        "hi": "Static text document jo padha na ja sake"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Real-world workflow analogies help engineers visualize component boundaries, request lifecycles, and data transformations intuitively.",
+      "hi": "Real-world analogies component boundaries aur request lifecycle ko visual aur intuitive banati hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When declaring and implementing Mongoose Middleware: Pre & Post Hooks, what syntactic convention is essential to prevent runtime errors?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) ko declare aur implement karte waqt kaunsa syntax niyam runtime errors rokne ke liye zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Adhering strictly to required parameters, handling asynchronous promises/callbacks cleanly, and verifying return value types",
+        "hi": "Zaroori parameters sahi pass karna, async promises ko handle karna aur return value types verify karna"
+      },
+      {
+        "en": "Wrapping every line of code inside an eval() execution block",
+        "hi": "Har line ko eval() block mein wrap karna"
+      },
+      {
+        "en": "Omitting import and require statements to reduce file size",
+        "hi": "File size ghatane ke liye import statements hatana"
+      },
+      {
+        "en": "Writing all code on a single continuous line without whitespace",
+        "hi": "Bina whitespace ke single line par code likhna"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Following standard ES6+ syntax contracts and properly handling promise resolution ensures execution safety and eliminates TypeError exceptions.",
+      "hi": "ES6+ syntax aur promise handling ke standard rules follow karne se TypeError aur crashes nahi aate."
+    }
+  },
+  {
+    "question": {
+      "en": "What is a common pitfall developers encounter when working with Mongoose Middleware: Pre & Post Hooks?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) ke saath kaam karte waqt developers aksar kaunsi aam galati karte hain?"
+    },
+    "options": [
+      {
+        "en": "Writing unit tests before implementing features",
+        "hi": "Feature likhne se pehle unit tests likhna"
+      },
+      {
+        "en": "Failing to handle failure edge cases, mutating shared state directly, or neglecting defensive validation guard clauses",
+        "hi": "Failure edge cases ko handle na karna, shared state direct mutate karna ya validation guard clauses na lagana"
+      },
+      {
+        "en": "Using strict equality checks (===) instead of loose equality (==)",
+        "hi": "Loose equality ke badle strict equality use karna"
+      },
+      {
+        "en": "Writing clear inline code documentation",
+        "hi": "Clear inline code comments likhna"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Neglecting edge cases and error handling causes silent regressions and race conditions that surface under concurrent user workloads.",
+      "hi": "Edge cases aur error handling miss karne se high-traffic production load mein silent bugs paida hote hain."
+    }
+  },
+  {
+    "question": {
+      "en": "According to production best practices, how should Mongoose Middleware: Pre & Post Hooks be architected for enterprise-grade stability?",
+      "hi": "Production best practices ke mutabiq enterprise-grade stability ke liye Mongoose Middleware: Pre & Post Hooks (Password Hashing) ko kaise architect karna chahiye?"
+    },
+    "options": [
+      {
+        "en": "Enforce modular boundaries, validate all incoming payloads against schemas, log structured context, and maintain pure functions where possible",
+        "hi": "Modular boundaries enforce karein, payloads ko schema se validate karein, structured logs rakhein aur pure functions use karein"
+      },
+      {
+        "en": "Hardcode sensitive database connection strings directly in client-side files",
+        "hi": "Database passwords ko client files mein hardcode karna"
+      },
+      {
+        "en": "Disable all linter rules and type warnings globally",
+        "hi": "Linter aur type warnings ko globally disable karna"
+      },
+      {
+        "en": "Store all user session variables in global un-scoped memory arrays",
+        "hi": "Global memory arrays mein sessions store karna"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Enterprise-grade code prioritizes modularity, strict input validation, structured observability, and stateless designs.",
+      "hi": "Production hardening ke liye modular code, schema validation aur observability standard rules hote hain."
+    }
+  },
+  {
+    "question": {
+      "en": "How does proper optimization of Mongoose Middleware: Pre & Post Hooks impact application memory and CPU consumption?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) ko sahi dhang se optimize karne par application memory aur CPU par kya asar padta hai?"
+    },
+    "options": [
+      {
+        "en": "It increases server CPU temperature to 100 degrees Celsius",
+        "hi": "Server CPU temperature 100 degrees kar deta hai"
+      },
+      {
+        "en": "It minimizes redundant computations, eliminates memory leaks from uncleaned references, and maintains low latency under high concurrency",
+        "hi": "Ye redundant computations ghatata hai, memory leaks khatam karta hai aur high concurrency mein low latency maintain karta hai"
+      },
+      {
+        "en": "It doubles heap RAM allocation unconditionally",
+        "hi": "Heap RAM ko zabardasti double karta hai"
+      },
+      {
+        "en": "Optimization has zero measurable impact in modern web engines",
+        "hi": "Modern web engines par optimization ka koi asar nahi hota"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Preventing unnecessary allocations and cleaning up resources ensures low garbage collection pressure and predictable response times.",
+      "hi": "Memory leak rokne aur unnecessary allocations hatane se Garbage Collector par load kam rehta hai aur response fast rehta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What security principle is non-negotiable when handling data within Mongoose Middleware: Pre & Post Hooks?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) mein data handle karte waqt kaunsa security principle non-negotiable hota hai?"
+    },
+    "options": [
+      {
+        "en": "Never trust client-supplied input: always sanitize, authenticate, authorize, and validate against strict schemas on the server",
+        "hi": "Client data par blind trust na karein: server par hamesha sanitize, authenticate, authorize aur validate karein"
+      },
+      {
+        "en": "Trust all requests coming from mobile devices or web browsers blindly",
+        "hi": "Mobile ya browser se aane wali requests par blind trust karein"
+      },
+      {
+        "en": "Disable HTTPS and SSL certificates to maximize raw network throughput",
+        "hi": "Network throughput ke liye HTTPS band karein"
+      },
+      {
+        "en": "Expose database admin credentials to all registered users",
+        "hi": "Database admin credentials sabhi users ko expose karein"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Zero-Trust security dictates that every incoming request and data mutation must be validated and authenticated server-side before processing.",
+      "hi": "Zero-Trust security ke mutabiq har incoming mutation ko server par strictly validate aur authenticate kiya jana chahiye."
+    }
+  },
+  {
+    "question": {
+      "en": "How does asynchronous non-blocking execution operate in Mongoose Middleware: Pre & Post Hooks?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) mein asynchronous non-blocking execution kaise kaam karta hai?"
+    },
+    "options": [
+      {
+        "en": "It freezes the entire operating system until each operation completes",
+        "hi": "Har operation complete hone tak operating system freeze rehta hai"
+      },
+      {
+        "en": "I/O operations return Promises or accept callbacks, delegating work to background threads/queues while the main thread remains free to handle incoming tasks",
+        "hi": "I/O operations Promises return karte hain aur background queues use karke main thread ko baaki requests ke liye free rakhte hain"
+      },
+      {
+        "en": "Async operations execute in reverse alphabetical order automatically",
+        "hi": "Async operations reverse alphabetical order mein chalte hain"
+      },
+      {
+        "en": "Async code only executes when triggered manually by a user click",
+        "hi": "Sirf manual user click par async code chalta hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Non-blocking asynchronous operations resolve via microtasks or event loop queues, ensuring the runtime thread serves concurrent requests smoothly.",
+      "hi": "Non-blocking model main thread ko free rakhta hai taaki server bina rukaawat ke multiple users ko simultaneously serve kar sake."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the recommended pattern for propagating errors that occur in Mongoose Middleware: Pre & Post Hooks?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) mein error aane par unhe propagate karne ka recommended pattern kya hai?"
+    },
+    "options": [
+      {
+        "en": "Intercepting the error, enriching it with operational context, and delegating to a centralized error handler or error boundary",
+        "hi": "Error ko intercept karna, debug context add karna, aur centralized error handler ya error boundary ko pass karna"
+      },
+      {
+        "en": "Swallowing errors silently with empty catch {} blocks to hide problems from logs",
+        "hi": "Khaali catch {} blocks se errors ko silently daba dena taaki logs mein na dikhein"
+      },
+      {
+        "en": "Shutting down the server machine power immediately",
+        "hi": "Server machine power turant band kar dena"
+      },
+      {
+        "en": "Sending internal raw stack traces and database credentials to end-user browsers",
+        "hi": "Raw stack trace aur DB passwords browser par bhej dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Centralized error propagation provides complete operational observability while shielding internal infrastructure details from end users.",
+      "hi": "Centralized error handling se system mein transparency rehti hai aur user ko clean, safe error messages milte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When authoring unit or integration tests for Mongoose Middleware: Pre & Post Hooks, what must the test suite assert?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) ke liye automated tests likhte waqt test suite ko kya assert karna zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Only that the JavaScript file can be saved to disk",
+        "hi": "Sirf ye ki file disk par save ho sake"
+      },
+      {
+        "en": "Both the happy path (expected inputs producing valid outputs) AND boundary edge cases (null, empty arrays, network timeouts, invalid types)",
+        "hi": "Happy path (valid data) AUR boundary edge cases (null, empty array, network timeout, invalid types) dono ko verify karna"
+      },
+      {
+        "en": "That the test suite takes at least 24 hours to finish running",
+        "hi": "Test suite ko 24 ghante chalna chahiye"
+      },
+      {
+        "en": "Testing is considered unnecessary in modern full-stack development",
+        "hi": "Modern development mein testing zaroori nahi hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Robust automated test suites verify both standard valid scenarios and defensive failure modes to prevent regressions during deployments.",
+      "hi": "Achhi testing valid inputs aur failure states dono ko assert karti hai taaki production deployments safe rahein."
+    }
+  },
+  {
+    "question": {
+      "en": "How does modular design enhance code maintainability in Mongoose Middleware: Pre & Post Hooks?",
+      "hi": "Modular design Mongoose Middleware: Pre & Post Hooks (Password Hashing) mein code maintainability ko kaise badhata hai?"
+    },
+    "options": [
+      {
+        "en": "By isolating distinct responsibilities into small, reusable, and independently testable units following the Single Responsibility Principle",
+        "hi": "Single Responsibility Principle ke zariye alag-alag kaamo ko chote, reusable aur testable units mein baant kar"
+      },
+      {
+        "en": "By combining all frontend, backend, and database code into a single 50,000-line script",
+        "hi": "Saara code ek hi 50,000-line script mein daal kar"
+      },
+      {
+        "en": "By removing all function names and replacing them with random numbers",
+        "hi": "Function names hata kar random numbers likhna"
+      },
+      {
+        "en": "By forbidding code comments and documentation across the repository",
+        "hi": "Comments aur documentation ban kar dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Modularity reduces cognitive load, simplifies debugging, prevents ripple effects during changes, and enables seamless team collaboration.",
+      "hi": "Modular code se readability badhti hai, debugging aasan hoti hai aur ek jagah badlav karne par doosri jagah bugs nahi aate."
+    }
+  },
+  {
+    "question": {
+      "en": "When application traffic scales 100x, how should Mongoose Middleware: Pre & Post Hooks be architected to support horizontal scaling?",
+      "hi": "Traffic 100x badhne par Mongoose Middleware: Pre & Post Hooks (Password Hashing) ko horizontally scale karne ke liye kya design approach honi chahiye?"
+    },
+    "options": [
+      {
+        "en": "Ensure the component/service is completely stateless, offload shared session/state to Redis/MongoDB, and distribute traffic via a load balancer",
+        "hi": "Service ko completely stateless banayein, shared state ko Redis/DB par shift karein aur load balancer se traffic distribute karein"
+      },
+      {
+        "en": "Store all user session variables in local in-memory JavaScript objects on the web server",
+        "hi": "Server ki local RAM mein session variables store karna"
+      },
+      {
+        "en": "Reboot the production server manually whenever memory usage exceeds 10%",
+        "hi": "Memory 10% cross hote hi server manually reboot karna"
+      },
+      {
+        "en": "Block 95% of incoming users using firewall rules",
+        "hi": "95% users ko firewall se block kar dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Stateless service architecture guarantees that any container instance can handle any incoming request, enabling dynamic auto-scaling without session loss.",
+      "hi": "Stateless architecture auto-scaling ka base hai jahan naye containers bina session loss ke instant traffic handle kar sakte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "In the full-stack MERN paradigm, where does Mongoose Middleware: Pre & Post Hooks properly belong and execute?",
+      "hi": "Full-stack MERN architecture mein Mongoose Middleware: Pre & Post Hooks (Password Hashing) kahan belong karta hai aur kahan execute hota hai?"
+    },
+    "options": [
+      {
+        "en": "In its designated architectural tier (Client browser UI, Express API backend, or MongoDB database) with clean API contracts connecting them",
+        "hi": "Apne designated tier (Browser UI, Express API backend, ya MongoDB) mein clean API contracts ke saath"
+      },
+      {
+        "en": "Directly on the end-user's local router firmware",
+        "hi": "User ke local router firmware par"
+      },
+      {
+        "en": "Inside the computer motherboard BIOS chip",
+        "hi": "Motherboard BIOS chip mein"
+      },
+      {
+        "en": "All MERN code runs strictly inside the MongoDB database engine",
+        "hi": "Saara MERN code sirf MongoDB ke andar chalta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Maintaining clear structural boundaries between client rendering, backend orchestration, and database persistence is the defining trait of MERN.",
+      "hi": "Client UI, backend server aur database ke beech saaf boundary maintain karna MERN architecture ka mukhya niyam hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What telemetry metric or observability signal is most crucial for diagnosing issues with Mongoose Middleware: Pre & Post Hooks in production?",
+      "hi": "Production mein Mongoose Middleware: Pre & Post Hooks (Password Hashing) ki problems diagnose karne ke liye sabse zaroori telemetry metric kaunsi hoti hai?"
+    },
+    "options": [
+      {
+        "en": "The desktop monitor brightness setting of the client",
+        "hi": "Client ke monitor ki brightness"
+      },
+      {
+        "en": "Latency percentiles (p95/p99), error rates (HTTP 4xx/5xx), throughput (RPS), and heap memory allocation deltas",
+        "hi": "Latency percentiles (p95/p99), error rates (4xx/5xx), throughput (RPS), aur heap memory allocation deltas"
+      },
+      {
+        "en": "The number of files in the project's root folder",
+        "hi": "Root folder mein files ki sankhya"
+      },
+      {
+        "en": "The physical keyboard model used by the engineer",
+        "hi": "Engineer ke keyboard ka model"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Observability platforms monitor p95/p99 latencies, error frequencies, and memory utilization to identify bottlenecks and regressions early.",
+      "hi": "p95/p99 latencies aur error rates monitor karne se crashes aane se pehle hi bottlenecks pakad mein aa jaate hain."
+    }
+  },
+  {
+    "question": {
+      "en": "Why is eliminating unintended side effects essential when authoring logic for Mongoose Middleware: Pre & Post Hooks?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) ka logic likhte waqt unintended side effects ko khatam karna kyun zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Side effects introduce unpredictability, corrupt shared state, cause race conditions, and make concurrent code nearly impossible to debug",
+        "hi": "Side effects se code unpredictable banta hai, shared state corrupt hoti hai aur race conditions create hoti hain"
+      },
+      {
+        "en": "Side effects permanently erase the developer's Git commit history",
+        "hi": "Git history permanently delete ho jaati hai"
+      },
+      {
+        "en": "Side effects are strictly required by the JavaScript ECMAScript standard",
+        "hi": "ECMAScript mein side effects required hain"
+      },
+      {
+        "en": "Side effects make all algorithms execute in O(1) time",
+        "hi": "Saare algorithms O(1) time mein chalte hain"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Pure and predictable logic produces the same output for identical inputs, guaranteeing thread safety, easy caching, and high reliability.",
+      "hi": "Pure logic se shared state safe rehti hai aur same input par hamesha consistent aur predictable output milta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "How should client-side state be kept in sync with backend server mutations in Mongoose Middleware: Pre & Post Hooks?",
+      "hi": "Mongoose Middleware: Pre & Post Hooks (Password Hashing) mein client-side state aur backend server data ko sync mein kaise rakha jata hai?"
+    },
+    "options": [
+      {
+        "en": "By forcing a complete hard page refresh every 3 seconds",
+        "hi": "Har 3 second mein poora page hard refresh karke"
+      },
+      {
+        "en": "Using optimistic UI updates with error rollback, automated query cache invalidation (TanStack Query/RTK), or WebSocket change streams",
+        "hi": "Optimistic UI updates with rollback, automated query cache invalidation ya WebSocket push streams use karke"
+      },
+      {
+        "en": "By disabling all database update operations permanently",
+        "hi": "Database updates ko permanently band karke"
+      },
+      {
+        "en": "By saving user state in local CSV files on the server desktop",
+        "hi": "Server desktop par CSV files save karke"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Modern full-stack architectures synchronize state seamlessly using query cache invalidation, optimistic updates, and real-time socket events.",
+      "hi": "Modern apps cache invalidation aur optimistic UI use karti hain taaki UI bina screen reload ke instantly updated rahe."
+    }
+  }
+],
+};

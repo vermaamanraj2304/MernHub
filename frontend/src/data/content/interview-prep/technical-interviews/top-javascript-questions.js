@@ -1,0 +1,1230 @@
+export default {
+  id: "int-javascript-questions",
+  title: {
+    en: "Top 25 Core JavaScript & Asynchronous Questions & Model Answers",
+    hi: "Top 25 Core JavaScript & Asynchronous JS Questions & Model Answers",
+  },
+  difficulty: "Intermediate",
+  readTime: 16,
+  sections: [
+    {
+      type: "concept",
+      heading: {
+        en: "1. The JavaScript Runtime Mental Model: What Senior Engineers Know",
+        hi: "1. JavaScript Runtime Ka Mental Model: Senior Engineers Kya Jante Hain",
+      },
+      body: {
+        en: `Every framework in the modern web ecosystem—React, Next.js, Express, Vue—compiles down to and executes on top of the **JavaScript runtime engine** (such as Google V8 in Chrome and Node.js). In interviews, senior interviewers test whether you understand the fundamental primitives that govern all JS execution:
+
+### The 4 Pillars of Core JS Interview Mastery:
+1. **Execution Context & Lexical Environment**: How the JavaScript engine creates the Variable Object, Scope Chain, and sets the \`this\` binding during the Creation Phase before executing code line-by-line.
+2. **Closures & Memory Retention**: How inner functions maintain references to outer lexical environments even after the parent function has popped off the call stack.
+3. **The Asynchronous Event Loop & Task Queues**: The distinction between the synchronous Call Stack, the high-priority **Microtask Queue** (Promises, \`queueMicrotask\`), and the **Macrotask Queue** (\`setTimeout\`, \`setInterval\`, I/O).
+4. **Prototypal Inheritance & \`this\` Binding**: How prototype chains resolve property lookups ($O(1)$ to $O(N)$), and how execution context changes \`this\` across regular functions, arrow functions, and explicit binding (\`call\`, \`apply\`, \`bind\`).`,
+        hi: `React, Express, aur Node.js sabhi JavaScript ke runtime engine (jaise Google V8) par chalte hain. Interviews mein senior engineers aapki JavaScript core fundamentals check karte hain:
+
+### 4 Mukhya Pillars:
+1. **Execution Context & Scope Chain**: Memory allocation (Creation Phase) aur line-by-line execution (Execution Phase).
+2. **Closures**: Andar ka function bahar wale function ke variables ko kaise yaad rakhta hai chahe bahar wala function complete ho chuka ho.
+3. **Microtasks vs Macrotasks**: Event loop mein Promises aur \`queueMicrotask\` ko \`setTimeout\` se pehle kyu priority milti hai.
+4. **Prototypes aur \`this\`**: Prototype chain lookup aur \`call\`, \`apply\`, \`bind\` ke saath \`this\` keyword ka behaviour.`,
+      },
+    },
+    {
+      type: "concept",
+      heading: {
+        en: "2. The Event Loop Priority: Microtasks vs Macrotasks",
+        hi: "2. Event Loop Priority: Microtask Queue vs Macrotask Queue",
+      },
+      body: {
+        en: `In both the browser and Node.js, asynchronous operations are placed into different queues with strict execution priorities:
+
+\`\`\`
+   ┌────────────────────────────────────────────────────────┐
+   │                  1. SYNCHRONOUS CALL STACK             │
+   │  Executes all top-level code until completely empty    │
+   └───────────────────────────┬────────────────────────────┘
+                               │ (Stack is empty)
+                               ▼
+   ┌────────────────────────────────────────────────────────┐
+   │               2. MICROTASK QUEUE (High Priority)       │
+   │  • Promises (.then, .catch, .finally)                  │
+   │  • queueMicrotask()                                    │
+   │  • MutationObserver (DOM changes)                      │
+   │  • process.nextTick() (Node.js only - highest)         │
+   │  ==> MUST DRAIN TO COMPLETION BEFORE ANY MACROTASK!    │
+   └───────────────────────────┬────────────────────────────┘
+                               │ (Microtasks empty)
+                               ▼
+   ┌────────────────────────────────────────────────────────┐
+   │              3. MACROTASK / TASK QUEUE (Low Priority)  │
+   │  • setTimeout / setInterval                            │
+   │  • setImmediate (Node.js)                              │
+   │  • I/O events, DOM click/keyboard events               │
+   │  ==> Executes ONLY ONE macrotask, then re-checks       │
+   │      Microtask queue again!                            │
+   └────────────────────────────────────────────────────────┘
+\`\`\`
+
+> [!IMPORTANT]
+> If a microtask schedules another microtask recursively, the engine will process microtasks indefinitely, **starving the macrotask queue and freezing UI rendering and user interactions**!`,
+        hi: `Asynchronous JavaScript mein execution ka strict priority order hota hai:
+
+1. **Call Stack**: Saara synchronous code line-by-line chalta hai.
+2. **Microtask Queue (High Priority)**: \`Promise.then\`, \`queueMicrotask\`, aur \`process.nextTick\`. Jab tak Microtask queue poori tarah khali nahi hoti, Event Loop aage nahi badhta!
+3. **Macrotask Queue (Low Priority)**: \`setTimeout\`, \`setInterval\`, aur I/O callbacks. Ek macrotask execute hone ke baad loop dobara check karta hai ki koi naya microtask toh nahi aaya.`,
+      },
+    },
+    {
+      type: "analogy",
+      heading: {
+        en: "Real-Life Analogy: The Indian Railways VIP Express Line vs General Counter",
+        hi: "Real-Life Analogy: Railway Station Ka VIP Line vs General Line (Microtasks vs Macrotasks)",
+      },
+      body: {
+        en: `Imagine the ticket reservation counter at New Delhi Railway Station:
+
+- **The Call Stack (The Clerk at the Window)**:
+  The booking clerk is processing the current ticket right now. Nothing else can happen until the clerk stamps and finishes this current paper.
+- **The Microtask Queue (The VIP Tatkal Priority Line)**:
+  Passengers holding confirmed VIP passes (Promises and \`queueMicrotask\`) stand in a special VIP lane directly in front of the counter.
+  The rule of the station is: **As long as there is even ONE person standing in the VIP line, the clerk is NOT allowed to serve anyone from the general line!**
+- **The Macrotask Queue (The General Public Waiting Queue)**:
+  People who took standard queue tokens (\`setTimeout(..., 0)\`, \`setInterval\`) sit in the waiting chairs.
+  Only when the clerk finishes the current ticket AND confirms the VIP line is 100% empty does the clerk call the next single person from the waiting chairs. If that person creates another VIP ticket, the waiting room is paused again!`,
+        hi: `Railway ticket counter ka example dekhein:
+
+- **Call Stack**: Counter par baitha clerk jo abhi saamne wale passenger ka ticket kaat raha hai.
+- **Microtask Queue (VIP Express Line)**:
+  VIP Tatkal line jisme Promises khade hain. Niyam ye hai ki jab tak VIP line mein ek bhi aadmi khada hai, clerk aam janta ki line ki taraf dekhega bhi nahi!
+- **Macrotask Queue (Aam Janta Ka Waiting Hall)**:
+  \`setTimeout(..., 0)\` wale log waiting room mein baithe hain. Clerk VIP line ko poori tarah khali karne ke baad hi waiting hall se ek aadmi ko bulata hai.`,
+      },
+    },
+    {
+      type: "syntax",
+      heading: {
+        en: "this Binding & Prototypal Inheritance Syntax",
+        hi: "this Keyword Binding Aur Prototypal Inheritance Ka Syntax",
+      },
+      body: {
+        en: `### 1. Explicit \`this\` Binding: \`call\`, \`apply\`, and \`bind\`:
+\`\`\`javascript
+const chef = {
+  name: 'Chef Sanjeev',
+  specialty: 'Biryani',
+};
+
+function cookDish(ingredient1, ingredient2) {
+  console.log(\`\${this.name} is cooking \${this.specialty} with \${ingredient1} and \${ingredient2}\`);
+}
+
+// 1. call: invokes immediately; arguments passed comma-separated
+cookDish.call(chef, 'Basmati Rice', 'Saffron');
+
+// 2. apply: invokes immediately; arguments passed as an Array
+cookDish.apply(chef, ['Basmati Rice', 'Cardamom']);
+
+// 3. bind: returns a NEW bound function with 'this' locked permanently
+const boundCook = cookDish.bind(chef, 'Basmati Rice');
+boundCook('Star Anise'); // Invoked later
+\`\`\`
+
+### 2. Prototypal Inheritance Chain:
+\`\`\`javascript
+// Parent constructor
+function Vehicle(wheels) {
+  this.wheels = wheels;
+}
+
+Vehicle.prototype.honk = function() {
+  return 'Beep beep!';
+};
+
+// Child constructor
+function ElectricCar(brand, batteryCapacity) {
+  Vehicle.call(this, 4); // Inherit instance properties
+  this.brand = brand;
+  this.batteryCapacity = batteryCapacity;
+}
+
+// Link prototype chain: ElectricCar.prototype -> Vehicle.prototype -> Object.prototype
+ElectricCar.prototype = Object.create(Vehicle.prototype);
+ElectricCar.prototype.constructor = ElectricCar; // Restore constructor reference
+
+ElectricCar.prototype.charge = function() {
+  return \`Charging \${this.brand} battery (\${this.batteryCapacity} kWh)...\`;
+};
+
+const myTesla = new ElectricCar('Tesla Model 3', 75);
+console.log(myTesla.honk()); // Found on Vehicle.prototype!
+console.log(myTesla instanceof Vehicle); // true
+\`\`\``,
+        hi: `### \`this\` Keyword Binding:
+- **call**: Turant run karta hai, arguments comma-separated hote hain: \`fn.call(context, arg1, arg2)\`.
+- **apply**: Turant run karta hai, arguments array mein hote hain: \`fn.apply(context, [arg1, arg2])\`.
+- **bind**: Naya function return karta hai jisme \`this\` permanently lock ho jata hai: \`const newFn = fn.bind(context)\`.
+- **Arrow Functions**: Inka apna \`this\` nahi hota; ye apne surrounding lexical scope se \`this\` inherit karte hain.`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 1: Closures, Currying, and Private State Memoizer",
+        hi: "Example 1: Closures Se Generic Memoization Function Banana",
+      },
+      body: {
+        en: `A high-frequency interview question: *"Implement a generic memoize utility function that caches results of expensive computations using closures."*
+
+\`\`\`javascript
+/**
+ * Generic memoizer supporting multiple arguments and custom serializers
+ */
+export function memoize(fn) {
+  // Private cache object retained permanently in lexical closure
+  const cache = new Map();
+
+  return function(...args) {
+    // Generate serialized cache key
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      console.log(\`[Cache HIT] for args: \${key}\`);
+      return cache.get(key);
+    }
+
+    console.log(\`[Cache MISS] Computing for args: \${key}\`);
+    // Execute target function with original context and arguments
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+    return result;
+  };
+}
+
+// Example usage: Expensive factorial calculation
+const factorial = memoize(function computeFactorial(n) {
+  if (n <= 1) return 1;
+  return n * computeFactorial(n - 1);
+});
+
+console.log(factorial(5)); // Computes 5, 4, 3, 2, 1
+console.log(factorial(5)); // Instant Cache HIT! Returns 120 directly from closure Map!
+\`\`\``,
+        hi: `Closure ka practical use case: Memoize function. Andar ka return kiya gaya function bahar ke \`cache\` variable ko permanently memory mein hold karke rakhta hai:
+
+\`\`\`javascript
+const memoizedAdd = memoize((a, b) => a + b);
+memoizedAdd(2, 3); // Calculate karta hai
+memoizedAdd(2, 3); // Cache se instant return karta hai
+\`\`\``,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 2: Promise Combinators Comparison & Promise.all Polyfill",
+        hi: "Example 2: Chaaro Promise Combinators Ka Farq Aur Promise.all Polyfill",
+      },
+      body: {
+        en: `### The 4 Modern Promise Combinators:
+| Method | Resolves When... | Rejects When... |
+|---|---|---|
+| \`Promise.all\` | ALL promises resolve successfully | ANY single promise rejects (**Fast-fail**) |
+| \`Promise.allSettled\` | ALL promises settle (either fulfilled or rejected) | Never rejects! Returns status array |
+| \`Promise.race\` | The FIRST promise settles (fulfilled OR rejected) | The FIRST promise settles with rejection |
+| \`Promise.any\` | The FIRST promise is FULFILLED successfully | ALL promises reject (AggregateError) |
+
+### Machine Coding: Polyfill for \`Promise.all\`:
+\`\`\`javascript
+export function promiseAllPolyfill(promises) {
+  return new Promise((resolve, reject) => {
+    // Handle non-array or empty inputs
+    if (!Array.isArray(promises)) {
+      return reject(new TypeError('Argument must be an array'));
+    }
+
+    if (promises.length === 0) {
+      return resolve([]);
+    }
+
+    const results = new Array(promises.length);
+    let completedCount = 0;
+
+    promises.forEach((promise, index) => {
+      // Ensure non-promise values are wrapped via Promise.resolve
+      Promise.resolve(promise)
+        .then((value) => {
+          results[index] = value; // Maintain original index order
+          completedCount += 1;
+
+          // When all promises have resolved, resolve outer promise
+          if (completedCount === promises.length) {
+            resolve(results);
+          }
+        })
+        .catch((err) => {
+          // Fast-fail: Reject outer promise immediately on first error
+          reject(err);
+        });
+    });
+  });
+}
+\`\`\``,
+        hi: `Interviewers aksar \`Promise.all\` ka custom polyfill likhne ko kehte hain:
+- Har promise ko \`Promise.resolve()\` se wrap karein.
+- Ek \`completedCount\` counter rakhein.
+- Results ko unke original array index par store karein.
+- Agar koi bhi ek promise reject ho, toh turant outer promise ko \`reject(err)\` kar dein (Fast-fail).`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 3: Event Bubbling, Capturing, and Delegation Pattern",
+        hi: "Example 3: Event Bubbling, Capturing Aur High-Performance Delegation",
+      },
+      body: {
+        en: `In DOM manipulation interviews, attaching individual click listeners to 1,000 list items is a red flag. Senior engineers use **Event Delegation**:
+
+\`\`\`javascript
+// Event Propagation Phases:
+// 1. CAPTURING PHASE (Window down to target element)
+// 2. TARGET PHASE (The actual clicked element)
+// 3. BUBBLING PHASE (Target bubbling up to Window - default listener phase)
+
+// ❌ BAD: Attaching 1,000 separate event listeners in memory
+document.querySelectorAll('.todo-item').forEach((item) => {
+  item.addEventListener('click', () => handleDelete(item.dataset.id));
+});
+
+// ✅ BEST: Single event listener on parent utilizing Event Delegation
+const todoList = document.querySelector('#todo-list');
+
+todoList.addEventListener('click', (event) => {
+  // Use .closest() to detect if the click or any nested icon inside the button was clicked
+  const deleteBtn = event.target.closest('[data-action="delete"]');
+  if (!deleteBtn) return; // Ignore clicks outside delete buttons
+
+  const todoItem = deleteBtn.closest('.todo-item');
+  const todoId = todoItem.dataset.id;
+
+  console.log(\`Deleting todo: \${todoId}\`);
+  deleteBtn.disabled = true;
+});
+\`\`\``,
+        hi: `1,000 items wali list mein har item par alag se \`addEventListener\` lagane se memory leak aur lag hota hai. Parent element par ek single listener lagana aur \`event.target.closest()\` se check karna **Event Delegation** kehlata hai.`,
+      },
+    },
+    {
+      type: "mistakes",
+      heading: {
+        en: "Classic JavaScript Tricky Questions & Traps",
+        hi: "JavaScript Interviews Ke 4 Sabse Tricky Bugs Aur Traps",
+      },
+      body: {
+        en: `### 1. \`var\` in Asynchronous Loops (Closure Scoping Trap)
+\`\`\`javascript
+// ❌ TRAP:
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 100);
+}
+// Prints: 3, 3, 3 (because 'var' is function-scoped; all callbacks share the same 'i' variable)
+
+// ✅ FIX: Use block-scoped 'let'
+for (let i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 100);
+}
+// Prints: 0, 1, 2 (a new lexical binding is created for each loop iteration)
+\`\`\`
+
+### 2. Double Equality (\`==\`) Type Coercion Surprises
+\`\`\`javascript
+console.log([] == ![]);       // true! (![] coerces to false, [] coerces to "", "" == 0, false == 0)
+console.log(null == undefined); // true! (special ECMA rule)
+console.log(null === undefined);// false (different types)
+console.log(NaN === NaN);       // false! (NaN is never equal to itself; use Number.isNaN())
+\`\`\`
+
+### 3. Floating-Point Precision Issues
+\`\`\`javascript
+console.log(0.1 + 0.2 === 0.3); // FALSE! Evaluates to 0.30000000000000004 due to IEEE 754 binary floating-point representation.
+// FIX: Use Number.EPSILON: Math.abs((0.1 + 0.2) - 0.3) < Number.EPSILON
+\`\`\`
+
+### 4. \`typeof null === 'object'\`
+This is a famous historic bug from the first version of JavaScript in 1995. In the engine, values were stored in 32-bit units with a type tag. The type tag for objects was \`000\`, and \`null\` was represented as the NULL pointer (\`0x00\`), so \`typeof null\` returned \`"object"\`. It cannot be fixed without breaking legacy web code. Always use \`val === null\` to check for null.`,
+        hi: `### 1. Loop Mein \`var\` Ka Trap:
+\`var\` function-scoped hota hai, isliye \`setTimeout\` loop khatam hone ke baad aakhri value print karta hai. Hamesha block-scoped \`let\` use karein.
+
+### 2. \`==\` vs \`===\`:
+\`[] == ![]\` true return karta hai kyunki JS weird type coercion karta hai. Hamesha strict equality \`===\` use karein.
+
+### 3. \`0.1 + 0.2 !== 0.3\`:
+IEEE 754 binary floating point precision ki wajah se ye \`0.30000000000000004\` banta hai.
+
+### 4. \`typeof null === 'object'\`:
+Ye 1995 ka ek historic JS bug hai. Null check karne ke liye hamesha \`val === null\` likhein.`,
+      },
+    },
+    {
+      type: "best-practices",
+      heading: {
+        en: "Modern JavaScript Best Practices",
+        hi: "Modern JavaScript Code Quality Best Practices",
+      },
+      body: {
+        en: `1. **Use structuredClone() for Deep Cloning**: Replace buggy \`JSON.parse(JSON.stringify(obj))\` with the native \`structuredClone(obj)\`, which preserves Dates, RegExps, Maps, Sets, and handles circular references cleanly.
+2. **Prefer Nullish Coalescing (\`??\`) Over Logical OR (\`||\`)**: \`value || 'default'\` incorrectly replaces legitimate falsy values like \`0\`, \`""\`, or \`false\`. Use \`value ?? 'default'\` which checks strictly for \`null\` or \`undefined\`.
+3. **Use Optional Chaining (\`?.\`)**: Safeguard deeply nested property access (\`user?.profile?.address?.zipCode\`) without messy nested \`if\` conditions.
+4. **Use WeakMap and WeakSet for Memory Management**: Weak collections hold "weak" references to objects, allowing the garbage collector to reclaim memory when the object has no other references.
+5. **Freeze Immutable Constants**: Use \`Object.freeze()\` to ensure shared configuration objects cannot be mutated at runtime by third-party scripts.`,
+        hi: `1. **structuredClone()**: Deep clone ke liye native \`structuredClone()\` use karein jo Dates aur circular references bhi handle karta hai.
+2. **Nullish Coalescing (??)**: Falsy values (\`0\`, \`""\`, \`false\`) ko preserve karne ke liye \`||\` ke bajaye \`??\` use karein.
+3. **Optional Chaining (?.)**: Nested objects ko safely access karein taaki runtime \`Cannot read property of undefined\` crash na ho.
+4. **WeakMap / WeakSet**: Memory leaks rokne ke liye DOM elements ya metadata ko WeakMap mein store karein.`,
+      },
+    },
+    {
+      type: "interview",
+      heading: {
+        en: "Top 25 Core JavaScript Interview Questions Bank",
+        hi: "Top 25 Core JavaScript Interview Questions Bank (Comprehensive Q&A)",
+      },
+      body: {
+        en: `### Q1: What is a Closure, and what are its practical use cases?
+**Answer**: A closure is the combination of a function bundled together with references to its surrounding lexical environment. In JavaScript, every inner function has access to the variables of its outer enclosing function even after the outer function has returned.
+**Practical Use Cases**:
+1. Data privacy / private variables (e.g. creating module counters that cannot be altered from outside).
+2. Function currying and partial application.
+3. Memoization and caching utilities.
+4. Event handlers maintaining state (e.g., maintaining debounce/throttle timers).
+
+---
+
+### Q2: What is the difference between \`let\`, \`const\`, and \`var\`?
+**Answer**:
+- \`var\`: Function-scoped, hoisted to the top of the function with default value \`undefined\`, permits re-declaration within the same scope, does not create separate loop iteration bindings.
+- \`let\`: Block-scoped (\`{ ... }\`), hoisted into the **Temporal Dead Zone (TDZ)** without initialization (accessing before declaration throws \`ReferenceError\`), does not permit re-declaration, creates a fresh binding for each loop iteration.
+- \`const\`: Block-scoped, hoisted into the TDZ, cannot be reassigned after declaration (must be initialized immediately). Note: Objects declared with \`const\` are mutable; properties can still be changed unless frozen with \`Object.freeze()\`.
+
+---
+
+### Q3: What is the Temporal Dead Zone (TDZ)?
+**Answer**: The Temporal Dead Zone is the period of time between the entering of a block scope and the actual execution of the variable declaration line for \`let\` and \`const\` variables. Although \`let\` and \`const\` variables are hoisted during the memory creation phase, they remain uninitialized. Accessing them inside the TDZ triggers a runtime \`ReferenceError: Cannot access 'x' before initialization\`.
+
+---
+
+### Q4: Explain the difference between Microtask Queue and Macrotask Queue.
+**Answer**:
+- **Microtask Queue**: Holds callbacks from Promises (\`.then\`, \`.catch\`, \`.finally\`), \`queueMicrotask()\`, \`MutationObserver\`, and \`process.nextTick()\` (Node.js). Microtasks execute immediately after the current call stack clears and **must completely drain** before the engine touches the macrotask queue.
+- **Macrotask Queue**: Holds callbacks from \`setTimeout\`, \`setInterval\`, \`setImmediate\` (Node.js), and UI events. The event loop picks exactly one macrotask per tick, executes it, then immediately drains any newly scheduled microtasks before rendering or picking the next macrotask.
+
+---
+
+### Q5: How does the \`this\` keyword work in regular functions vs arrow functions?
+**Answer**:
+- **Regular Functions**: \`this\` is dynamically determined at **call time** based on how the function is invoked (as an object method, standalone function, constructor with \`new\`, or bound via \`call\`/\`apply\`/\`bind\`). In standalone calls in non-strict mode, \`this\` is the global object; in strict mode (\`"use strict"\`), it is \`undefined\`.
+- **Arrow Functions**: Do **not** have their own \`this\`, \`arguments\`, \`super\`, or \`new.target\`. Instead, they resolve \`this\` **lexically** from their enclosing scope at declaration time. \`call\`, \`apply\`, and \`bind\` have no effect on an arrow function's \`this\`.
+
+---
+
+### Q6: What is Prototypal Inheritance, and what is the difference between \`__proto__\` and \`prototype\`?
+**Answer**:
+- JavaScript uses prototypal inheritance: objects inherit properties and methods directly from other objects via an internal link named \`[[Prototype]]\`.
+- \`prototype\`: A property that exists only on constructor functions and classes. It defines the blueprint object that will become the \`[[Prototype]]\` of all instances created with \`new Constructor()\`.
+- \`__proto__\`: The historical accessor property on individual object instances that exposes their internal \`[[Prototype]]\`. In modern JS, \`Object.getPrototypeOf(obj)\` and \`Object.setPrototypeOf(obj)\` are preferred.
+
+---
+
+### Q7: What are the 7 primitive data types in JavaScript?
+**Answer**:
+1. \`string\`
+2. \`number\` (IEEE 754 64-bit float)
+3. \`bigint\` (arbitrary-precision integer)
+4. \`boolean\` (\`true\` / \`false\`)
+5. \`undefined\` (unassigned variable)
+6. \`symbol\` (unique and immutable identifier)
+7. \`null\` (intentional absence of value)
+All primitives are immutable and passed by value. Everything else (Arrays, Functions, Objects, Maps, Sets, Dates) is an Object and passed by reference.
+
+---
+
+### Q8: What is the difference between \`shallow copy\` and \`deep copy\`?
+**Answer**:
+- **Shallow Copy** (\`{ ...obj }\`, \`Object.assign({}, obj)\`, \`arr.slice()\`) duplicates only top-level primitive properties. If the object contains nested objects or arrays, only the memory references are copied, meaning modifying a nested property in the clone mutates the original object.
+- **Deep Copy** (\`structuredClone(obj)\`) recursively clones every nested object and array at all levels into entirely fresh memory addresses, ensuring complete mutation independence.
+
+---
+
+### Q9: How do \`call()\`, \`apply()\`, and \`bind()\` differ?
+**Answer**:
+- \`call(thisArg, arg1, arg2, ...)\`: Immediately invokes the function with the specified \`this\` context and individual arguments.
+- \`apply(thisArg, [arg1, arg2, ...])\`: Immediately invokes the function with the specified \`this\` context and an array of arguments.
+- \`bind(thisArg, arg1, ...)\`: Does not invoke the function immediately. Instead, it returns a new function with \`this\` permanently bound to \`thisArg\` and prepended preset arguments.
+
+---
+
+### Q10: What is Event Delegation and why is it useful?
+**Answer**: Event Delegation is a DOM pattern where instead of attaching event listeners to multiple child elements, a single listener is attached to a shared ancestor parent element. Because of **event bubbling**, events triggered on child elements propagate up the DOM tree to the parent.
+**Benefits**:
+1. Drastically reduces memory usage (one listener instead of thousands).
+2. Automatically handles dynamically added elements (new children added to the DOM immediately work without re-attaching listeners).
+
+---
+
+### Q11: What is the difference between \`event.stopPropagation()\` and \`event.stopImmediatePropagation()\`?
+**Answer**:
+- \`stopPropagation()\`: Prevents the event from bubbling up or capturing down to parent/ancestor DOM nodes. However, other event listeners attached to the **same current element** will still execute.
+- \`stopImmediatePropagation()\`: Prevents the event from traveling to ancestor nodes AND prevents any other listeners registered on the **same current element** from executing.
+
+---
+
+### Q12: What is Function Currying?
+**Answer**: Currying is a functional programming technique where a function that takes multiple arguments is transformed into a sequence of nested unary functions that each take a single argument:
+\`\`\`javascript
+// Uncurried: f(a, b, c)
+// Curried: f(a)(b)(c)
+const add = (a) => (b) => (c) => a + b + c;
+console.log(add(1)(2)(3)); // 6
+\`\`\`
+Useful for creating specialized reusable utility functions via partial application.
+
+---
+
+### Q13: What is the difference between \`Map\` and a plain JavaScript \`Object\`?
+**Answer**:
+- **Keys**: Plain objects only allow strings and Symbols as keys (numeric keys are coerced to strings). \`Map\` allows keys of **any data type**, including objects, functions, and numbers.
+- **Key Ordering**: \`Map\` guarantees keys are iterated in exact insertion order.
+- **Size**: \`Map\` has a built-in \`.size\` property ($O(1)$), whereas objects require \`Object.keys(obj).length\` ($O(N)$).
+- **Performance**: \`Map\` is heavily optimized for frequent additions and deletions of key-value pairs.
+
+---
+
+### Q14: What is the difference between \`WeakMap\` and \`Map\`?
+**Answer**:
+1. In a \`WeakMap\`, keys **must be Objects** (primitives cannot be keys).
+2. Keys in a \`WeakMap\` are held "weakly"—if there are no other references to the key object in the application, the garbage collector will reclaim the key object and its associated value from memory automatically.
+3. \`WeakMap\` is not enumerable (cannot loop with \`for..of\`, no \`.keys()\`, no \`.size\`) to avoid exposing non-deterministic GC timing. Ideal for storing private DOM element metadata.
+
+---
+
+### Q15: What are Generator Functions and what is the \`yield\` keyword?
+**Answer**: A generator function (\`function*\`) is a function that can pause its execution and resume later. Calling a generator returns a **Generator Object** conforming to the Iterator protocol:
+- Calling \`.next()\` executes code until it reaches the \`yield\` keyword, which returns an object \`{ value, done }\`.
+- Subsequent \`.next()\` calls resume execution from where it paused, preserving internal variable state across pauses.
+
+---
+
+### Q16: What is the difference between \`Object.freeze()\` and \`Object.seal()\`?
+**Answer**:
+- \`Object.freeze()\`: Prevents adding new properties, deleting existing properties, and modifying existing property values or descriptors. (Makes object fully read-only, shallowly).
+- \`Object.seal()\`: Prevents adding new properties and deleting existing properties, but **permits modifying the values** of existing writable properties.
+
+---
+
+### Q17: What is Coercion and what is the difference between implicit and explicit coercion?
+**Answer**:
+- **Explicit Coercion**: Developer intentionally converts a type using functions: \`Number('42')\`, \`String(123)\`, \`Boolean(x)\`.
+- **Implicit Coercion**: The JavaScript engine automatically converts types behind the scenes during operations:
+  - \`'5' + 2 = '52'\` (number coerced to string due to binary \`+\` concatenation).
+  - \`'5' - 2 = 3\` (string coerced to number due to mathematical \`-\` operator).
+
+---
+
+### Q18: What is Debouncing vs Throttling?
+**Answer**: Both limit the rate of function execution:
+- **Debounce**: Delays execution until a specified quiet period has elapsed with **zero new calls** (e.g. search auto-complete waits until the user pauses typing for 300ms).
+- **Throttle**: Ensures the function executes at most **once per specified time interval** (e.g. window resize or scroll handler fires at most once every 100ms regardless of how many events fire).
+
+---
+
+### Q19: What is the purpose of the \`Symbol\` primitive in JavaScript?
+**Answer**: A \`Symbol\` creates an anonymous, globally unique and immutable primitive value.
+**Uses**:
+1. Object property keys that will never collide with any other property names (even if named identically).
+2. Implementing Well-Known Symbols to customize standard engine behaviors (e.g., \`Symbol.iterator\` to make custom objects iterable via \`for..of\`, \`Symbol.toPrimitive\`).
+
+---
+
+### Q20: What is the difference between \`for..in\` and \`for..of\` loops?
+**Answer**:
+- \`for..in\`: Iterates over all **enumerable property keys (names)** of an object, including properties inherited up the prototype chain. (Best avoided on arrays).
+- \`for..of\`: Iterates over **values** produced by any **iterable object** (implementing \`Symbol.iterator\`), including Arrays, Strings, Sets, Maps, and NodeLists.
+
+---
+
+### Q21: What is a Pure Function and why does it matter?
+**Answer**: A pure function satisfies two criteria:
+1. **Deterministic**: Given the exact same inputs, it always returns the exact same output.
+2. **No Side Effects**: It does not mutate external state, modify argument references, make network calls, or read global variables.
+Pure functions are trivial to test, cache (memoize), refactor, and reason about in concurrent environments like React.
+
+---
+
+### Q22: What happens when the \`new\` keyword is invoked with a constructor function?
+**Answer**: The \`new\` operator executes 4 distinct steps:
+1. Creates a brand new, empty plain JavaScript object \`{}\`.
+2. Sets the new object's internal \`[[Prototype]]\` link to the constructor function's \`prototype\` property.
+3. Invokes the constructor function with its \`this\` context bound to the newly created object.
+4. Returns the new object (unless the constructor explicitly returns its own non-primitive object).
+
+---
+
+### Q23: What is the difference between \`async/await\` and raw Promises?
+**Answer**: \`async/await\` is syntactic sugar built directly on top of Promises and Generators:
+- An \`async\` function always returns a Promise implicitly.
+- The \`await\` keyword pauses the execution of the async function in a non-blocking manner until the Promise settles, unwrapping the resolved value or throwing an error if rejected.
+- It enables writing asynchronous code that looks and behaves like synchronous code, making \`try/catch\` error handling natural and readable.
+
+---
+
+### Q24: What is the purpose of \`use strict\` mode?
+**Answer**: Strict mode (\`"use strict";\`) opts into a restricted variant of JavaScript:
+1. Eliminates silent errors by throwing exceptions (e.g. assigning to undeclared variables throws \`ReferenceError\` instead of creating global variables).
+2. Fixes mistakes that impede V8 engine optimizations (can run code faster).
+3. Disables problematic keywords and syntax (e.g. forbids \`with\` statement and duplicate parameter names).
+4. Keeps \`this\` as \`undefined\` instead of the global window object in standalone function calls.
+
+---
+
+### Q25: How does Garbage Collection identify unreachable memory in V8?
+**Answer**: V8 uses the **Mark-and-Sweep** algorithm:
+1. **Root Set**: The engine starts from a known set of roots (the global object, active local variables and parameters on the current call stack, and DOM tree).
+2. **Marking**: It traverses all references outward from the roots, marking every reachable object as "alive".
+3. **Sweeping**: Any memory block in the heap that was not marked during traversal is deemed unreachable and swept away, returning the memory addresses to the free memory pool.`,
+        hi: `### Top 25 Core JS Q&A:
+Closures, TDZ, Execution Context, Microtask vs Macrotask, \`this\` keyword, Prototypes, Data types, Deep vs Shallow copy, \`call\`/\`apply\`/\`bind\`, Event delegation, Debounce vs Throttle, WeakMap, Symbols, Generators, aur V8 Garbage Collection sabhi concepts model answers ke saath detailed hain.`,
+      },
+    },
+    {
+      type: "summary",
+      heading: {
+        en: "Quick Summary & Key Takeaways",
+        hi: "Quick Summary & Key Takeaways",
+      },
+      body: {
+        en: `- **Event Loop Priority**: Call Stack (sync) -> Microtasks (Promises, \`queueMicrotask\`) -> Macrotasks (\`setTimeout\`, I/O).
+- **Closures**: Retain references to lexical scope even after outer function execution terminates.
+- **this Binding**: Regular functions determine \`this\` dynamically at call site; Arrow functions inherit \`this\` lexically from definition scope.
+- **Promise Combinators**: \`Promise.all\` (fast-fail), \`Promise.allSettled\` (waits for all), \`Promise.race\` (first to settle), \`Promise.any\` (first to fulfill).
+- **Deep Cloning**: Always prefer native \`structuredClone()\` over JSON serialization.`,
+        hi: `- **Priority**: Call Stack -> Microtasks (Promises) -> Macrotasks (\`setTimeout\`).
+- **Closures**: Outer function ke variables ko memory mein permanently lock karke rakhta hai.
+- **this**: Regular functions mein call-site decide karta hai; Arrow functions surrounding scope se inherit karte hain.
+- **Promise Combinators**: \`Promise.all\` pehle error par fail hota hai; \`allSettled\` sabka result wait karta hai.
+- **Deep Clone**: \`JSON.parse(JSON.stringify())\` ke badle native \`structuredClone()\` use karein.`,
+      },
+    },
+  ],
+  quiz: [
+  {
+    "question": {
+      "en": "What is the logged output order of the following snippet: setTimeout(() => console.log('A'), 0); Promise.resolve().then(() => console.log('B')); console.log('C');",
+      "hi": "Is code ka exact output order kya hoga: setTimeout(() => console.log('A'), 0); Promise.resolve().then(() => console.log('B')); console.log('C');"
+    },
+    "options": [
+      {
+        "en": "A, B, C",
+        "hi": "A, B, C"
+      },
+      {
+        "en": "C, B, A",
+        "hi": "C, B, A"
+      },
+      {
+        "en": "C, A, B",
+        "hi": "C, A, B"
+      },
+      {
+        "en": "B, C, A",
+        "hi": "B, C, A"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Synchronous 'C' runs first on the Call Stack. Then microtask Promise 'B' runs before any macrotask. Finally, macrotask setTimeout 'A' runs.",
+      "hi": "Synchronous 'C' pehle chalta hai. Fir microtask Promise 'B' chalta hai. Aakhri mein macrotask setTimeout 'A' chalta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "Why does invoking an arrow function with .call() or .bind() fail to alter its 'this' binding?",
+      "hi": "Arrow function par .call() ya .bind() lagane se uska 'this' kyun nahi badalta?"
+    },
+    "options": [
+      {
+        "en": "Because arrow functions are compiled to binary files",
+        "hi": "Kyunki arrow functions binary hote hain"
+      },
+      {
+        "en": "Arrow functions do not have their own 'this' binding; they resolve 'this' lexically from their enclosing scope at declaration time, so call/bind are ignored",
+        "hi": "Arrow functions ka apna 'this' nahi hota; wo declaration ke samay surrounding lexical scope se 'this' uthate hain, isliye call/bind ignore hote hain"
+      },
+      {
+        "en": "Because call and bind only work in Node.js",
+        "hi": "Kyunki call aur bind sirf Node mein chalte hain"
+      },
+      {
+        "en": "Because arrow functions cannot be called more than once",
+        "hi": "Kyunki arrow function sirf ek baar call ho sakte hain"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Arrow functions have no dynamic 'this' context. The JS engine looks up 'this' through the lexical scope chain just like any ordinary variable.",
+      "hi": "Arrow functions mein dynamic this nahi hota; wo regular variable ki tarah outer scope se this lete hain."
+    }
+  },
+  {
+    "question": {
+      "en": "Which Promise combinator waits for ALL promises to complete regardless of whether they resolve or reject, returning an array of status objects?",
+      "hi": "Kaunsa Promise combinator sabhi promises ke khatam hone ka intezar karta hai chahe wo resolve hon ya reject?"
+    },
+    "options": [
+      {
+        "en": "Promise.race",
+        "hi": "Promise.race"
+      },
+      {
+        "en": "Promise.all",
+        "hi": "Promise.all"
+      },
+      {
+        "en": "Promise.allSettled",
+        "hi": "Promise.allSettled"
+      },
+      {
+        "en": "Promise.any",
+        "hi": "Promise.any"
+      }
+    ],
+    "correctAnswer": 2,
+    "explanation": {
+      "en": "Promise.allSettled never fast-fails. It waits for every promise to settle, returning an array of objects with { status: 'fulfilled', value } or { status: 'rejected', reason }.",
+      "hi": "Promise.allSettled sabhi promises settle hone tak wait karta hai aur kabhi direct reject nahi hota."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the primary advantage of Event Delegation over adding click listeners directly to hundreds of child elements?",
+      "hi": "Hundreds of child elements par alag listener lagane ke muqable Event Delegation ka sabse bada fayda kya hai?"
+    },
+    "options": [
+      {
+        "en": "It converts HTML buttons into WebGL 3D meshes",
+        "hi": "Ye buttons ko 3D mesh banata hai"
+      },
+      {
+        "en": "It reduces memory consumption to a single listener and automatically handles dynamically inserted elements via event bubbling",
+        "hi": "Ye memory footprint ko 1 single listener tak ghatata hai aur naye add hue elements ko event bubbling se automatically handle karta hai"
+      },
+      {
+        "en": "It disables browser CSS styles",
+        "hi": "Ye CSS disable karta hai"
+      },
+      {
+        "en": "It forces the browser to run in 60fps",
+        "hi": "Ye 60fps force karta hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Event delegation attaches one listener to a parent. As events bubble up, event.target is checked, saving memory and supporting dynamically added DOM nodes.",
+      "hi": "Event delegation parent par ek single listener lagata hai jo memory bachata hai aur dynamic elements ko bina re-binding ke handle karta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the Temporal Dead Zone (TDZ) in JavaScript?",
+      "hi": "JavaScript mein Temporal Dead Zone (TDZ) kya hota hai?"
+    },
+    "options": [
+      {
+        "en": "The time when the server is powered off",
+        "hi": "Server band hone ka samay"
+      },
+      {
+        "en": "The period between entering a block scope and the execution of the let/const variable declaration line, during which accessing the variable throws a ReferenceError",
+        "hi": "Block scope mein enter karne se lekar let/const declaration line execute hone tak ka samay, jisme variable access karne par ReferenceError throw hota hai"
+      },
+      {
+        "en": "The duration of an HTTP timeout",
+        "hi": "HTTP timeout ka time"
+      },
+      {
+        "en": "A deprecated feature removed in ES6",
+        "hi": "ES6 mein hataya gaya feature"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Variables declared with let and const are hoisted to the top of their block scope during creation phase, but remain uninitialized until execution reaches their declaration line.",
+      "hi": "let aur const hoist toh hote hain lekin uninitialize rehte hain declaration tak. Is time gap ko Temporal Dead Zone kehte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "How does a Closure retain access to outer function variables even after the outer function has finished executing?",
+      "hi": "Bahar wala function khatam hone ke baad bhi Closure uske variables ko kaise access kar paata hai?"
+    },
+    "options": [
+      {
+        "en": "By storing them on the user's hard drive",
+        "hi": "Hard drive par save karke"
+      },
+      {
+        "en": "The inner function retains a hidden internal reference [[Environment]] to the outer function's Lexical Environment record on the heap, preventing the Garbage Collector from freeing it",
+        "hi": "Inner function heap par outer function ke Lexical Environment record ka hidden [[Environment]] reference hold karke rakhta hai jisse GC use delete nahi karta"
+      },
+      {
+        "en": "Through an automatic cookie created by the browser",
+        "hi": "Browser cookie ke zariye"
+      },
+      {
+        "en": "By converting all variables into global window variables",
+        "hi": "Variables ko global bana kar"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "When a function is created, it retains a reference to its lexical environment. As long as the inner function is reachable, its enclosing scope remains alive in heap memory.",
+      "hi": "Inner function lexical scope ko heap memory mein pakad ke rakhta hai, isliye parent function ke stack se hatne ke baad bhi data zinda rehta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the difference between an object's __proto__ and a constructor function's prototype property?",
+      "hi": "Kisi object ke __proto__ aur constructor function ke prototype property mein kya farq hai?"
+    },
+    "options": [
+      {
+        "en": "prototype exists on constructor functions and defines the blueprint for instances; __proto__ is the instance property that points to that prototype object",
+        "hi": "prototype constructor functions par hota hai jo instances ka blueprint hai; __proto__ instance ka actual pointer hai jo us prototype object ko point karta hai"
+      },
+      {
+        "en": "They are exact synonyms in every way",
+        "hi": "Dono bilkul identical hain"
+      },
+      {
+        "en": "prototype is deprecated, only __proto__ works",
+        "hi": "prototype deprecate ho gaya hai"
+      },
+      {
+        "en": "__proto__ is only supported in React",
+        "hi": "__proto__ sirf React mein chalta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Constructor functions have a .prototype property that becomes the [[Prototype]] of instances. Objects have __proto__ which exposes their actual prototype link.",
+      "hi": "Constructor.prototype naye objects ke liye template hota hai, jabki object.__proto__ us object ka live prototype link hota hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What dangerous side-effect occurs if a microtask (e.g. queueMicrotask) recursively schedules another microtask indefinitely?",
+      "hi": "Agar koi microtask (jaise queueMicrotask) recursively naye microtasks schedule karta rahe toh kya khatra hota hai?"
+    },
+    "options": [
+      {
+        "en": "The browser immediately closes all tabs",
+        "hi": "Browser saare tabs band kar deta hai"
+      },
+      {
+        "en": "Microtask Queue Starvation: The engine processes microtasks continuously, completely starving the macrotask queue and freezing UI rendering and user interactions",
+        "hi": "Microtask Starvation: Engine lagataar microtasks process karta rehta hai, jisse macrotask queue aur screen rendering poori tarah freeze ho jaati hai"
+      },
+      {
+        "en": "The CPU fan stops spinning",
+        "hi": "CPU fan band ho jata hai"
+      },
+      {
+        "en": "JavaScript automatically converts into C++",
+        "hi": "JS C++ ban jaata hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "The event loop must drain the entire microtask queue before rendering or executing the next macrotask. Recursive microtasks create an infinite loop that freezes the thread.",
+      "hi": "Event loop jab tak saare microtasks khatam na hon, aage nahi badhta. Recursive microtasks se browser freeze ho jata hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the difference between event.stopPropagation() and event.stopImmediatePropagation()?",
+      "hi": "event.stopPropagation() aur event.stopImmediatePropagation() mein kya farq hota hai?"
+    },
+    "options": [
+      {
+        "en": "stopPropagation stops bubbling to parent nodes; stopImmediatePropagation ALSO prevents any other listeners registered on the CURRENT element from executing",
+        "hi": "stopPropagation parent nodes tak bubbling rokkta hai; stopImmediatePropagation USI CURRENT element par lage baaki saare listeners ko bhi execute hone se rokkta hai"
+      },
+      {
+        "en": "stopImmediatePropagation only works on forms",
+        "hi": "stopImmediatePropagation sirf forms par chalta hai"
+      },
+      {
+        "en": "stopPropagation deletes the HTML element",
+        "hi": "stopPropagation HTML element delete karta hai"
+      },
+      {
+        "en": "There is zero difference between them",
+        "hi": "Dono mein koi farq nahi hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "stopPropagation stops the event from traversing further up/down the DOM tree. stopImmediatePropagation also halts execution of any sibling listeners on the exact same DOM node.",
+      "hi": "stopPropagation parent tak event travel rokta hai, jabki stopImmediatePropagation usi element par lage agle listeners ko bhi block kar deta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "Why does typeof null return 'object' in JavaScript?",
+      "hi": "JavaScript mein typeof null 'object' kyun return karta hai?"
+    },
+    "options": [
+      {
+        "en": "Because null has 10 object methods",
+        "hi": "Kyunki null mein methods hote hain"
+      },
+      {
+        "en": "It is a legacy bug from the original 1995 JavaScript implementation where values had 32-bit type tags and 000 represented Object, while null was represented as the NULL pointer 0x00",
+        "hi": "Ye 1995 ki JS engine ka historic bug hai jahan type tag 000 Object ka tha aur null pointer 0x00 hone ki wajah se engine ne ise object evaluate kiya"
+      },
+      {
+        "en": "Because null is secretly an instance of Array",
+        "hi": "Kyunki null Array ka instance hai"
+      },
+      {
+        "en": "It was intentionally added in ES6",
+        "hi": "ES6 mein add hua tha"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "In the initial version of JS, types were represented by a type tag. Object was 000 and the null pointer was all zeros, so typeof returned 'object'. It is preserved for backwards compatibility.",
+      "hi": "Ye 1995 ka purana bug hai jo backwards compatibility ki wajah se fix nahi kiya gaya. Null check karne ke liye hamesha val === null use karein."
+    }
+  },
+  {
+    "question": {
+      "en": "Why does 0.1 + 0.2 === 0.3 evaluate to false in JavaScript?",
+      "hi": "JavaScript mein 0.1 + 0.2 === 0.3 false kyun hota hai?"
+    },
+    "options": [
+      {
+        "en": "Because JavaScript uses Python math",
+        "hi": "Kyunki JS Python math use karta hai"
+      },
+      {
+        "en": "Numbers in JavaScript are represented in IEEE 754 64-bit binary floating point, where 0.1 and 0.2 have repeating binary fractions resulting in 0.30000000000000004",
+        "hi": "JavaScript IEEE 754 64-bit binary floating point format use karta hai jisme 0.1 aur 0.2 exact binary mein represent nahi hote aur 0.30000000000000004 banate hain"
+      },
+      {
+        "en": "Because 0.1 is converted to a string",
+        "hi": "0.1 string ban jata hai"
+      },
+      {
+        "en": "Because === cannot compare decimals",
+        "hi": "=== decimals compare nahi karta"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Just as 1/3 has infinite repeating decimals in base-10 (0.333...), 1/10 has infinite repeating fractions in base-2 binary, causing minor precision rounding errors.",
+      "hi": "Binary floating point mein 0.1 aur 0.2 exact fit nahi hote aur unka jod 0.30000000000000004 aata hai. Comparison ke liye Number.EPSILON use karein."
+    }
+  },
+  {
+    "question": {
+      "en": "Why is native structuredClone(obj) superior to JSON.parse(JSON.stringify(obj)) for deep cloning objects?",
+      "hi": "Deep cloning ke liye structuredClone(obj) ko JSON.parse(JSON.stringify(obj)) se behtar kyun mana jata hai?"
+    },
+    "options": [
+      {
+        "en": "structuredClone works without any CPU",
+        "hi": "Ye bina CPU ke chalta hai"
+      },
+      {
+        "en": "structuredClone natively supports circular references, Dates, RegExps, Maps, Sets, and ArrayBuffers, whereas JSON serialization drops undefined, functions, and corrupts Dates into strings",
+        "hi": "structuredClone circular references, Dates, RegExps, Maps aur Sets ko sahi copy karta hai, jabki JSON serialization unhe string bana deta hai ya drop kar deta hai"
+      },
+      {
+        "en": "JSON.stringify only works in Node.js",
+        "hi": "JSON.stringify sirf Node mein chalta hai"
+      },
+      {
+        "en": "There is zero difference",
+        "hi": "Dono same hain"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "JSON serialization cannot handle circular references (throws error), turns Dates into strings, and discards Maps, Sets, and undefined properties. structuredClone handles all of them natively.",
+      "hi": "JSON serialization circular reference par crash ho jata hai aur Dates ko strings bana deta hai. structuredClone sabhi native types ko perfectly clone karta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What does [] == ![] evaluate to and why?",
+      "hi": "[] == ![] ka result kya hota hai aur kyun?"
+    },
+    "options": [
+      {
+        "en": "false, because an array can never equal its negation",
+        "hi": "false, kyunki array apni negation ke barabar nahi ho sakta"
+      },
+      {
+        "en": "true, because ![] coerces to false, [] coerces to empty string '', and '' == false coerces both to 0 == 0",
+        "hi": "true, kyunki ![] false banta hai, [] empty string '' banta hai, aur '' == false dono 0 == 0 mein coerce hokar true dete hain"
+      },
+      {
+        "en": "TypeError",
+        "hi": "TypeError throw hota hai"
+      },
+      {
+        "en": "undefined",
+        "hi": "undefined"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "1. ![] has higher precedence and is false. 2. [] == false converts [] to primitive '' via toString(). 3. '' == false converts both to numbers: 0 == 0, which is true! Always use ===.",
+      "hi": "Type coercion rules: ![] false banata hai, fir [] '' banata hai, aur fir dono numbers (0 == 0) ban jaate hain jo true evaluate hota hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the primary difference in execution timing between Debouncing and Throttling?",
+      "hi": "Debounce aur Throttle ke execution timing mein mukhya farq kya hai?"
+    },
+    "options": [
+      {
+        "en": "Debounce delays execution until a quiet period has elapsed with zero new calls; Throttle enforces a maximum execution rate of once per specified time interval",
+        "hi": "Debounce tab tak wait karta hai jab tak user calls karna band na kar de (quiet period); Throttle har fixed interval mein maximum 1 baar execute hone deta hai"
+      },
+      {
+        "en": "Throttle is for keyboard input only; Debounce is for window resize",
+        "hi": "Throttle sirf keyboard ke liye hai"
+      },
+      {
+        "en": "Debounce runs the function 100 times",
+        "hi": "Debounce 100 baar run karta hai"
+      },
+      {
+        "en": "They are exact synonyms",
+        "hi": "Dono ek hi cheez hain"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Debounce waits for silence (e.g. search autocomplete typing). Throttle guarantees execution at steady, fixed intervals (e.g. scroll position tracking or game loops).",
+      "hi": "Debounce typing khatam hone ka intezar karta hai. Throttle continuously har 100ms mein maximum 1 baar chalta rehta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What is a unique memory management feature of WeakMap in JavaScript?",
+      "hi": "JavaScript mein WeakMap ka sabse unique memory management feature kya hai?"
+    },
+    "options": [
+      {
+        "en": "It automatically saves data to IndexedDB",
+        "hi": "Data IndexedDB mein save karta hai"
+      },
+      {
+        "en": "Keys must be objects, and they are held 'weakly' so that if no other reference to the key object exists, the garbage collector can reclaim the key and value from memory",
+        "hi": "Keys sirf objects ho sakte hain aur wo 'weakly' hold hote hain; agar key ka koi aur reference na ho toh Garbage Collector use memory se free kar deta hai"
+      },
+      {
+        "en": "It allows up to 1 Terabyte of data",
+        "hi": "1TB data store karta hai"
+      },
+      {
+        "en": "It can be iterated with for..of",
+        "hi": "for..of se iterate hota hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "WeakMap prevents memory leaks when associating private metadata with objects (like DOM elements) because the entries are automatically collected when the object key is discarded.",
+      "hi": "WeakMap ke keys weak references hote hain. Jab target object delete hota hai, toh WeakMap se uski entry automatically garbage collect ho jaati hai."
+    }
+  },
+  {
+    "question": {
+      "en": "How do Generator Functions (function*) differ from regular functions in JavaScript?",
+      "hi": "JavaScript mein Generator Functions (function*) regular functions se kaise alag hote hain?"
+    },
+    "options": [
+      {
+        "en": "Generator functions can pause execution at yield and resume later when .next() is called, maintaining internal state across pauses",
+        "hi": "Generator functions yield par execution pause kar sakte hain aur .next() call karne par dobara chal sakte hain, state preserve rakhte hue"
+      },
+      {
+        "en": "Generator functions only run on mobile phones",
+        "hi": "Sirf mobile par chalte hain"
+      },
+      {
+        "en": "Generator functions cannot return values",
+        "hi": "Values return nahi kar sakte"
+      },
+      {
+        "en": "They run 10x slower than all other functions",
+        "hi": "10x slow chalte hain"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Generators return an Iterator object. When .next() is called, code runs until the yield keyword, returning { value, done } and suspending the execution context.",
+      "hi": "Generators code execution ko beech mein rok (pause) sakte hain aur .next() se dubara resume kar sakte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the difference between Object.freeze() and Object.seal()?",
+      "hi": "Object.freeze() aur Object.seal() mein kya farq hai?"
+    },
+    "options": [
+      {
+        "en": "Object.freeze makes all properties read-only and prevents adding/deleting keys; Object.seal prevents adding/deleting keys but PERMITS modifying existing writable property values",
+        "hi": "Object.freeze sabhi properties ko read-only banata hai; Object.seal naye keys add/delete karna rokkta hai lekin existing properties ki value modify karne deta hai"
+      },
+      {
+        "en": "Object.seal encrypts the object with a password",
+        "hi": "Object.seal password encrypt karta hai"
+      },
+      {
+        "en": "Object.freeze is deep, Object.seal is shallow",
+        "hi": "Object.freeze deep hota hai"
+      },
+      {
+        "en": "There is no difference in ES6",
+        "hi": "Koi farq nahi hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Both prevent adding or removing keys. However, freeze makes properties non-writable (completely immutable), while seal allows existing writable properties to be mutated.",
+      "hi": "Object.freeze poori tarah read-only bana deta hai. Object.seal naye fields rokta hai lekin purane fields ki value change karne ki azaadi deta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the key difference between for..in and for..of loops in JavaScript?",
+      "hi": "JavaScript mein for..in aur for..of loops ke beech mukhya farq kya hai?"
+    },
+    "options": [
+      {
+        "en": "for..in iterates over enumerable property keys (names), including prototype properties; for..of iterates over values produced by an iterable object (arrays, strings, maps)",
+        "hi": "for..in enumerable keys (names) par ghoomta hai (prototypes sahit); for..of iterable objects ke values par ghoomta hai"
+      },
+      {
+        "en": "for..of was removed in modern JavaScript",
+        "hi": "for..of hata diya gaya tha"
+      },
+      {
+        "en": "for..in only works on numbers",
+        "hi": "for..in sirf numbers par chalta hai"
+      },
+      {
+        "en": "They behave identically on all data types",
+        "hi": "Dono bilkul same behave karte hain"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "for..in gives keys (strings). for..of requires an iterable (Symbol.iterator) and gives values. You should never use for..in to iterate over arrays.",
+      "hi": "for..in object ke keys deta hai jabki for..of array ya iterable ke values deta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What two conditions define a 'Pure Function' in JavaScript?",
+      "hi": "JavaScript mein 'Pure Function' kehlaane ke liye kaunsi do conditions zaroori hain?"
+    },
+    "options": [
+      {
+        "en": "1. Given the same inputs, it always returns the exact same output (deterministic); 2. It produces zero side effects (no mutating external state, no I/O calls)",
+        "hi": "1. Same input par hamesha exact same output deta hai (deterministic); 2. Zero side effects hote hain (external state mutate nahi karta, I/O call nahi karta)"
+      },
+      {
+        "en": "1. Written in TypeScript; 2. Has less than 10 lines of code",
+        "hi": "TypeScript mein likha ho aur 10 lines se kam ho"
+      },
+      {
+        "en": "1. Returns a Promise; 2. Has a catch block",
+        "hi": "Promise return karta ho"
+      },
+      {
+        "en": "1. Runs on the GPU; 2. Uses async/await",
+        "hi": "GPU par chalta ho"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "A pure function is deterministic and side-effect free. It never mutates arguments or global variables, making it easy to test, memoize, and refactor.",
+      "hi": "Pure functions same argument par hamesha same result dete hain aur bahar ke kisi variable ko touch nahi karte, isliye inka test karna aasan hota hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What are the 4 distinct steps executed by the JavaScript engine when the 'new' keyword is invoked with a constructor function?",
+      "hi": "Jab constructor function ke saath 'new' keyword call hota hai toh JavaScript engine kaunse 4 steps execute karta hai?"
+    },
+    "options": [
+      {
+        "en": "1. Creates a new empty object {}; 2. Links the object's [[Prototype]] to the constructor's prototype; 3. Binds 'this' to the new object and executes the constructor; 4. Returns the new object (unless constructor returns another object)",
+        "hi": "1. Naya empty object {} banata hai; 2. [[Prototype]] ko constructor ke prototype se link karta hai; 3. 'this' ko naye object se bind karke constructor chalata hai; 4. Naya object return karta hai"
+      },
+      {
+        "en": "1. Reboots the engine; 2. Reads disk; 3. Runs GC; 4. Quits",
+        "hi": "Engine reboot karke quit karta hai"
+      },
+      {
+        "en": "1. Compiles to C++; 2. Executes; 3. Deletes file; 4. Done",
+        "hi": "C++ mein compile karta hai"
+      },
+      {
+        "en": "1. Creates a string; 2. Converts to number; 3. Returns null; 4. Done",
+        "hi": "String bana kar null deta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "new creates a fresh object, links its prototype to Constructor.prototype, executes the constructor with 'this' bound to the new instance, and returns it.",
+      "hi": "new keyword naya object create karta hai, prototype link set karta hai, constructor mein 'this' assign karta hai aur object return karta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the core architectural purpose of Top 25 Core JavaScript & Asynchronous Questions & Model Answers in the modern full-stack MERN ecosystem?",
+      "hi": "Modern full-stack MERN ecosystem mein Top 25 Core JavaScript & Asynchronous JS Questions & Model Answers ka mukhya architectural maksad kya hota hai?"
+    },
+    "options": [
+      {
+        "en": "It manages physical computer cooling and power supply",
+        "hi": "Ye physical computer cooling aur power supply manage karta hai"
+      },
+      {
+        "en": "It provides structured, robust, and scalable patterns for handling top 25 core javascript & asynchronous questions & model answers with high performance and maintainability",
+        "hi": "Ye high performance aur maintainability ke saath Top 25 Core JavaScript & Asynchronous JS Questions & Model Answers ko handle karne ka structured aur scalable pattern provide karta hai"
+      },
+      {
+        "en": "It completely replaces JavaScript with binary machine code in browser tabs",
+        "hi": "Ye browser tabs mein JavaScript ko binary machine code se replace karta hai"
+      },
+      {
+        "en": "It is only used for printing documents to physical printers",
+        "hi": "Ye sirf physical printers par documents print karne ke liye hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Top 25 Core JavaScript & Asynchronous Questions & Model Answers establishes clean separation of concerns, ensuring predictable data flow, robust error handling, and optimal runtime performance in production.",
+      "hi": "Top 25 Core JavaScript & Asynchronous JS Questions & Model Answers clean architecture aur separation of concerns deta hai jisse application scalable aur maintainable banti hai."
+    }
+  }
+],
+};

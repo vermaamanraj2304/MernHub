@@ -1,0 +1,1072 @@
+export default {
+  id: "react-hooks-memo-callback",
+  title: {
+    en: "useMemo & useCallback: Memoization in React",
+    hi: "useMemo & useCallback: Performance Optimization",
+  },
+  difficulty: "Intermediate",
+  readTime: 12,
+  sections: [
+    {
+      type: "concept",
+      heading: {
+        en: "1. What is Memoization in React?",
+        hi: "1. React Mein Memoization Kya Hai Aur Iska Fayda Kya Hai?",
+      },
+      body: {
+        en: `In JavaScript, every time a component function re-renders:
+1. Every calculation inside the function executes from scratch.
+2. Every function declared inside the component is instantiated as a **brand new function reference** in memory.
+
+**Memoization** is an optimization technique where you **cache the result** of an expensive computation or the **instance of a function** between renders, recalculating it only when its input dependencies change.
+
+### The Two Memoization Hooks:
+- **\`useMemo\`**: Caches the **result of a function call** (the computed return value).
+- **\`useCallback\`**: Caches the **function definition itself** (the memory reference).
+
+\`\`\`javascript
+// useMemo caches a VALUE:
+const cachedValue = useMemo(() => calculateTotal(items), [items]);
+
+// useCallback caches a FUNCTION:
+const cachedFunction = useCallback((id) => handleDelete(id), []);
+\`\`\`
+*(Fun fact: \`useCallback(fn, deps)\` is just syntactic sugar for \`useMemo(() => fn, deps)\`!)*`,
+        hi: `JavaScript mein jab bhi koi component re-render hota hai:
+1. Uske andar ke saare math calculations dobara shuru se chalte hain.
+2. Uske andar bane saare functions RAM mein **naye memory address (reference)** ke sath dobara create hote hain.
+
+**Memoization** ek aisi technique hai jisme hum kisi bhari calculation ke **result ko memory mein cache** kar lete hain ya **function ke reference ko freeze** kar dete hain, taaki jab tak inputs na badlein tab tak bekaar ka kaam na karna pade.
+
+### Do Memoization Hooks:
+- **\`useMemo\`**: Function ke **return value** ko cache karta hai.
+- **\`useCallback\`**: **Function definition** ko cache karta hai.`,
+      },
+    },
+    {
+      type: "concept",
+      heading: {
+        en: "2. The Problem with New Function References (React.memo Synergy)",
+        hi: "2. Naye Function Reference Ki Samasya Aur React.memo Ka Khel",
+      },
+      body: {
+        en: `Why do function references matter?
+In JavaScript, functions are objects:
+\`\`\`javascript
+const fn1 = () => {};
+const fn2 = () => {};
+console.log(fn1 === fn2); // FALSE! Different memory addresses!
+\`\`\`
+
+If you pass an inline arrow function to a child component wrapped in **\`React.memo\`**:
+\`\`\`jsx
+// App re-renders -> creates new onClick function instance -> Child thinks props changed -> Child re-renders anyway!
+<HeavyChildComponent onClick={() => handleAction()} />
+\`\`\`
+Wrapping the handler in **\`useCallback\`** preserves the exact same memory address across renders, allowing \`React.memo\` to successfully skip re-rendering the child!
+
+> **Rule of Thumb**: Using \`useCallback\` on a function passed to a regular, non-memoized component provides **zero performance benefit**! It only helps when the child is wrapped in \`React.memo\` or when the function is an effect dependency.`,
+        hi: `Function reference itna zaroori kyun hai?
+JavaScript mein do identical functions bhi memory mein alag hote hain (\`fn1 === fn2\` hamesha \`false\` hota hai).
+
+Agar aap kisi child component ko inline function bhejte hain jise **\`React.memo\`** se wrap kiya gaya hai:
+\`\`\`jsx
+<HeavyChildComponent onClick={() => handleAction()} />
+\`\`\`
+Parent ke render hote hi naya function banta hai. Child samajhta hai ki prop badal gaya, aur \`React.memo\` hone ke bavajood child faltu mein re-render ho jata hai!
+
+**\`useCallback\`** function ka memory reference wahi rakhta hai, jisse \`React.memo\` child ko safely re-render hone se bacha leta hai!`,
+      },
+    },
+    {
+      type: "analogy",
+      heading: {
+        en: "Real-Life Analogy: The Restaurant Gravy Base vs The Laminated Recipe",
+        hi: "Real-Life Analogy: Halwai Ka Gravy Base Aur Laminated Recipe Card",
+      },
+      body: {
+        en: `Consider a high-volume Indian dhaba during dinner rush:
+
+- **\`useMemo\` (The 20-Liter Makhani Gravy Pot)**:
+  - Making rich Makhani gravy (grinding cashews, roasting spices, simmering tomatoes for 3 hours) is computationally expensive (**expensive calculation**).
+  - The chef prepares one big 20-liter pot in the morning and caches it on the counter (**\`useMemo\` caching the value**).
+  - When customer #1 orders Shahi Paneer and customer #2 orders Dal Makhani, the chef scoops from the ready gravy in 5 seconds instead of chopping raw tomatoes from scratch for each plate!
+- **\`useCallback\` (The Laminated Recipe Card for Junior Cooks)**:
+  - The head chef writes down the exact spices and steps on a laminated card and sticks it above the stove (**freezing function definition**).
+  - Every time an order ticket prints, the head chef doesn't take out a pen and rewrite the 2-page recipe by hand. The junior cook refers to the exact same permanent card (**\`useCallback\` keeping the function reference identical**)!`,
+        hi: `Dhaba ke kitchen se samjhein:
+
+- **\`useMemo\` (Subah Banaya Hua 20-Litre Gravy Base)**:
+  - Shahi gravy banana (tamatar peesna, kaju bhunna, 2 ghante pakana) bohot heavy kaam hai (**expensive calculation**).
+  - Chef subah hi 20 litre gravy bana kar fridge mein rakh leta hai (**\`useMemo\` se value cache karna**).
+  - Har customer ke order par dubara shuru se tamatar nahi peese jaate, wahi cached gravy use hoti hai!
+- **\`useCallback\` (Kitchen Mein Chipka Laminated Recipe Card)**:
+  - Head chef ne recipe ek card par print karke diwar par chipka di hai.
+  - Har naye order par chef pen lekar dubara nayi recipe nahi likhta, wahi purana card sabhi use karte hain (**Function reference preserve karna**)!`,
+      },
+    },
+    {
+      type: "syntax",
+      heading: {
+        en: "Syntax & Signatures: useMemo and useCallback",
+        hi: "Syntax: useMemo Aur useCallback Ka Code Structure",
+      },
+      body: {
+        en: `### 1. useMemo Syntax:
+\`\`\`jsx
+import { useMemo } from "react";
+
+const visibleTodos = useMemo(() => {
+  // Expensive calculation
+  return todos.filter(t => t.title.toLowerCase().includes(search.toLowerCase()));
+}, [todos, search]); // Only recalculates when 'todos' or 'search' changes!
+\`\`\`
+
+### 2. useCallback Syntax:
+\`\`\`jsx
+import { useCallback } from "react";
+
+const handleRemove = useCallback((id) => {
+  setItems(prev => prev.filter(item => item.id !== id));
+}, []); // Empty deps because functional updater doesn't need external variables!
+\`\`\``,
+        hi: `### 1. useMemo Syntax:
+\`\`\`jsx
+import { useMemo } from "react";
+
+const filteredProducts = useMemo(() => {
+  // Heavy filtering logic
+  return products.filter(p => p.price <= maxPrice);
+}, [products, maxPrice]); // Sirf tab recalculate hoga jab inputs badlein
+\`\`\`
+
+### 2. useCallback Syntax:
+\`\`\`jsx
+import { useCallback } from "react";
+
+const handleDelete = useCallback((id) => {
+  setItems(prev => prev.filter(i => i.id !== id));
+}, []); // Functional updater ke kaaran empty deps
+\`\`\``,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 1: useMemo for Heavy Array Filtering and Math Calculation",
+        hi: "Example 1: Badi List Filter Karne Aur Math Ke Liye useMemo",
+      },
+      body: {
+        en: `Benchmarking a heavy list filtering and total price calculation across 5,000 items, avoiding expensive recalculations when unrelated component state changes.`,
+        hi: `5,000 products ki list ko filter karne aur total amount nikalne ke liye \`useMemo\` ka use karna.`,
+      },
+      code: {
+        language: "jsx",
+        filename: "HeavyListMemoizer.jsx",
+        snippet: `import React, { useState, useMemo } from "react";
+
+// Generate 2,000 synthetic products
+const ALL_PRODUCTS = Array.from({ length: 2000 }, (_, i) => ({
+  id: i + 1,
+  title: \`Product #\${i + 1} - \${i % 2 === 0 ? "Electronics" : "Fashion"}\`,
+  price: (i + 1) * 25,
+  inStock: i % 3 !== 0
+}));
+
+export default function HeavyListMemoizer() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [darkMode, setDarkMode] = useState(false); // Unrelated state!
+
+  // OPTIMIZATION: Only filters and computes total when searchTerm changes!
+  // Toggling darkMode will NOT re-run this expensive loop!
+  const filteredData = useMemo(() => {
+    console.log("⚡ [EXPENSIVE COMPUTATION] Filtering 2,000 products...");
+    const matched = ALL_PRODUCTS.filter(p =>
+      p.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const totalVal = matched.reduce((sum, p) => sum + p.price, 0);
+
+    return { matched, totalVal };
+  }, [searchTerm]);
+
+  return (
+    <div className={\`p-6 rounded-3xl border transition-colors max-w-md space-y-4 \${
+      darkMode ? "bg-slate-900 text-white border-slate-800" : "bg-white text-slate-900 border-slate-200 shadow-md"
+    }\`}>
+      <div className="flex justify-between items-center">
+        <h3 className="font-bold text-sm">Product Catalog Filter</h3>
+        <button
+          onClick={() => setDarkMode(d => !d)}
+          className="px-2.5 py-1 text-xs rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-semibold"
+        >
+          Toggle Theme (No Re-filter)
+        </button>
+      </div>
+
+      <input
+        type="text"
+        placeholder="Search 2,000 products..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+
+      <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs flex justify-between font-mono">
+        <span>Matches: {filteredData.matched.length}</span>
+        <span className="font-bold text-indigo-600 dark:text-indigo-400">
+          Total: ₹{filteredData.totalVal.toLocaleString("en-IN")}
+        </span>
+      </div>
+    </div>
+  );
+}`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 2: useCallback Pairing with React.memo to Halt Child Renders",
+        hi: "Example 2: useCallback Aur React.memo Se Child Re-renders Rokna",
+      },
+      body: {
+        en: `Demonstrating how passing a regular function triggers re-renders of a \`React.memo\` child, and how \`useCallback\` successfully suppresses them.`,
+        hi: `\`React.memo\` wale child component ko stable function reference dekar unnecessary re-renders se bachana.`,
+      },
+      code: {
+        language: "jsx",
+        filename: "ParentChildMemoDemo.jsx",
+        snippet: `import React, { useState, useCallback } from "react";
+
+// Child Component wrapped in React.memo (skips render if props are shallowly equal)
+const TodoItem = React.memo(function TodoItem({ id, text, onDelete }) {
+  console.log(\`[RENDER] Child TodoItem #\${id} rendered.\`);
+
+  return (
+    <div className="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs">
+      <span>{text}</span>
+      <button
+        onClick={() => onDelete(id)}
+        className="text-rose-500 font-bold px-2 py-0.5 hover:bg-rose-50 dark:hover:bg-rose-950 rounded"
+      >
+        Delete
+      </button>
+    </div>
+  );
+});
+
+export default function ParentChildMemoDemo() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: "Revise React Fiber Architecture" },
+    { id: 2, text: "Build MERN Learning Hub" }
+  ]);
+  const [clickCount, setClickCount] = useState(0);
+
+  // OPTIMIZED: Stable function reference across renders of Parent
+  const handleDelete = useCallback((idToDelete) => {
+    setTodos(prev => prev.filter(t => t.id !== idToDelete));
+  }, []); // Empty dependencies!
+
+  return (
+    <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md max-w-md space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+          useCallback + React.memo
+        </h3>
+        <button
+          onClick={() => setClickCount(c => c + 1)}
+          className="text-xs px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-medium"
+        >
+          Unrelated Clicks ({clickCount})
+        </button>
+      </div>
+
+      <p className="text-xs text-slate-500">
+        Clicking the button re-renders Parent, but the memoized children DO NOT re-render! Check the browser console.
+      </p>
+
+      <div className="space-y-2">
+        {todos.map(todo => (
+          <TodoItem
+            key={todo.id}
+            id={todo.id}
+            text={todo.text}
+            onDelete={handleDelete} // Stable reference!
+          />
+        ))}
+      </div>
+    </div>
+  );
+}`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 3: Context Value Stabilization with useMemo & useCallback",
+        hi: "Example 3: Context Value Ko useMemo Aur useCallback Se Stabilize Karna",
+      },
+      body: {
+        en: `The production pattern for React Context: Combining \`useCallback\` for exposed methods and \`useMemo\` for the provider value object.`,
+        hi: `React Context ke andar methods ko \`useCallback\` aur value object ko \`useMemo\` se freeze karna.`,
+      },
+      code: {
+        language: "jsx",
+        filename: "CartContextProvider.jsx",
+        snippet: `import React, { createContext, useContext, useState, useMemo, useCallback } from "react";
+
+const CartContext = createContext(null);
+
+export function CartProvider({ children }) {
+  const [items, setItems] = useState([]);
+
+  // 1. useCallback for actions
+  const addItem = useCallback((item) => {
+    setItems(prev => [...prev, item]);
+  }, []);
+
+  const removeItem = useCallback((id) => {
+    setItems(prev => prev.filter(i => i.id !== id));
+  }, []);
+
+  const clearCart = useCallback(() => {
+    setItems([]);
+  }, []);
+
+  // 2. useMemo for the context value object
+  const value = useMemo(() => ({
+    items,
+    itemCount: items.length,
+    addItem,
+    removeItem,
+    clearCart
+  }), [items, addItem, removeItem, clearCart]);
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+}
+
+export function useCart() {
+  const context = useContext(CartContext);
+  if (!context) throw new Error("useCart must be used within CartProvider");
+  return context;
+}`,
+      },
+    },
+    {
+      type: "mistakes",
+      heading: {
+        en: "Common Mistakes & How to Fix Them",
+        hi: "Aam Galatiyan Aur Unka Solution",
+      },
+      body: {
+        en: `### 1. Premature Optimization (Overusing useMemo on Cheap Operations)
+- **Mistake**: Wrapping trivial calculations in \`useMemo\`:
+  \`const sum = useMemo(() => a + b, [a, b]);\`
+- **Why**: Calling \`useMemo\` allocates an internal closure, creates an array comparison, and consumes memory. For basic operations, the overhead of \`useMemo\` is **higher** than simply recalculating \`a + b\`!
+- **Fix**: Only use \`useMemo\` for genuinely expensive computations (e.g. filtering 1,000+ items, complex regex, heavy sorting) or reference preservation.
+
+### 2. Using useCallback on Non-Memoized Components
+- **Mistake**: Wrapping every handler in \`useCallback\` when passing it to a standard HTML \`<button onClick={fn}>\` or a regular unmemoized component.
+- **Why**: Standard components re-render when their parent renders anyway! \`useCallback\` provides zero optimization unless paired with \`React.memo\`.
+
+### 3. Missing Dependencies in Dependency Array
+- **Mistake**: Omitting variables to prevent recalculation.
+- **Consequence**: The cached function or value gets trapped in a stale closure, using outdated variables from 5 renders ago!
+- **Fix**: Use functional state updaters (\`set(prev => ...)\`) or include all required variables in \`[deps]\`.`,
+        hi: `### 1. Choti Choti Cheezon Par Faltu useMemo Lagana (Premature Optimization)
+- **Galati**: \`const sum = useMemo(() => a + b, [a, b]);\` likhna.
+- **Nuksan**: \`useMemo\` khud memory aur checks chalata hai. \`a + b\` jaisi simple calculation par \`useMemo\` lagane se app ulta slow ho jaati hai!
+- **Solution**: Sirf badi calculations (1,000+ items filter karna, heavy sorting) par hi use karein.
+
+### 2. Normal Components Par useCallback Ka Faltu Use
+- **Galati**: Normal \`<button onClick={fn}>\` ke liye \`useCallback\` lagana.
+- **Wajah**: Normal buttons parent render hone par re-render hote hi hain. \`useCallback\` ka fayda sirf tab hota hai jab child component **\`React.memo\`** se wrap ho!
+
+### 3. Dependency Array Se Variables Gayab Karna (Stale Closure)
+- **Galati**: Function ke andar use hone wale variable ko \`[deps]\` mein na daalna.
+- **Nuksan**: Function purane render ki stale value use karta rehta hai.
+- **Solution**: Hamesha functional state update (\`prev => ...\`) use karein ya variable ko dependencies mein daalein.`,
+      },
+    },
+    {
+      type: "tip",
+      heading: {
+        en: "Best Practices: Memoization Rules of Thumb",
+        hi: "Memoization Ke Rules of Thumb",
+      },
+      body: {
+        en: `1. **Profile First, Optimize Second**: Never add \`useMemo\` or \`useCallback\` blindly. Open the **React DevTools Profiler** and confirm that a component is actually lagging before applying memoization.
+2. **Pair useCallback with React.memo**: \`useCallback\` is a tool designed primarily to preserve referential equality for components optimized with \`React.memo\`.
+3. **Use Functional Updaters to Keep Dependencies Empty**: Writing \`setCount(prev => prev + 1)\` avoids putting \`count\` into the dependency array of \`useCallback\`, keeping the function reference permanent across the component lifetime!
+4. **Always Memoize Context Values**: Context value objects should almost always be wrapped in \`useMemo\` to prevent cascading consumer re-renders.`,
+        hi: `1. **Pehle Profiler Se Check Karein**: Bina soche-samjhe har jagah memoize na karein. React DevTools Profiler se dekhein ki sach mein lag ho raha hai ya nahi.
+2. **useCallback Ko React.memo Ke Sath Pair Karein**: \`useCallback\` tabhi kaam karta hai jab child component \`React.memo\` se optimized ho.
+3. **Empty Dependencies Ke Liye Functional Updaters**: \`setCount(prev => prev + 1)\` use karne se \`count\` ko dependency mein nahi dalna padta aur function hamesha stable rehta hai.
+4. **Context Values Ko Hamesha Memoize Karein**: Provider ke value object ko \`useMemo\` se wrap karna compulsory best practice hai.`,
+      },
+    },
+    {
+      type: "interview",
+      heading: {
+        en: "Top Interview Questions & Answers",
+        hi: "Top Interview Sawaal Aur Jawab",
+      },
+      body: {
+        en: `### Q1: What is the exact difference between useMemo and useCallback?
+**Answer**:
+- \`useMemo(() => fn(), deps)\`: Invokes the function and caches its **computed return value**. Use it to avoid re-running expensive calculations on every render.
+- \`useCallback(fn, deps)\`: Caches the **function instance itself** without calling it. Use it to pass a stable function reference to \`React.memo\` child components or effect dependency arrays.
+In fact, \`useCallback(fn, deps)\` is equivalent to \`useMemo(() => fn, deps)\`.
+
+### Q2: Why does wrapping a function in useCallback NOT prevent the parent component from re-rendering?
+**Answer**:
+\`useCallback\` does not prevent the component in which it is defined from re-rendering. Whenever parent state or props change, the parent executes from top to bottom. \`useCallback\` only ensures that the *returned function reference* remains identical to the previous render, which protects *child components* wrapped in \`React.memo\` from re-rendering.
+
+### Q3: Why is premature optimization with useMemo considered harmful?
+**Answer**:
+Every \`useMemo\` call incurs overhead: allocating a dependency array in memory, storing the previous value, and running an \`Object.is\` comparison on every dependency during every render. If the computation being memoized is cheap (like string concatenation or basic arithmetic), the memoization overhead is greater than the cost of recalculating it, degrading overall performance and cluttering code readability.`,
+        hi: `### Q1: useMemo aur useCallback mein kya mukhya antar hai?
+**Jawab**:
+- \`useMemo\`: Function ko execute karke uske **result (return value)** ko cache karta hai taaki heavy calculation dobara na chale.
+- \`useCallback\`: Bina execute kiye **function definition** ko cache karta hai taaki memory reference change na ho aur \`React.memo\` child re-render hone se bach sake.
+
+### Q2: useCallback lagane se parent component ka re-render rukta hai kya?
+**Jawab**:
+Nahi. \`useCallback\` parent component ko re-render hone se nahi rokta. Yeh sirf function ka memory reference wahi rakhta hai taaki child component (jo \`React.memo\` mein hai) re-render na ho.
+
+### Q3: Har jagah useMemo lagana nuksandeh kyun hai?
+**Jawab**:
+Kyunki \`useMemo\` khud memory leta hai aur har render par dependencies ko compare karta hai. Chhoti-moti calculations (jaise \`a + b\`) par \`useMemo\` lagane se app fast hone ke bajaye slow ho jaati hai aur code complex ban jata hai.`,
+      },
+    },
+    {
+      type: "summary",
+      heading: {
+        en: "Quick Summary: useMemo & useCallback",
+        hi: "Quick Summary: useMemo & useCallback",
+      },
+      body: {
+        en: `- **useMemo**: Caches computed return values of expensive calculations.
+- **useCallback**: Caches function references to prevent child re-renders.
+- **React.memo Synergy**: \`useCallback\` is only beneficial when passed to memoized children or effect deps.
+- **Avoid Premature Optimization**: Do not memoize cheap, simple calculations.
+- **Context Value**: Always wrap Context Provider value objects in \`useMemo\`.`,
+        hi: `- **useMemo**: Heavy calculations ke return value ko cache karta hai.
+- **useCallback**: Function reference ko freeze karta hai taaki child re-render na ho.
+- **React.memo Ke Sath**: \`useCallback\` tabhi kaam ka hai jab child \`React.memo\` use kar raha ho.
+- **Over-optimization Se Bachein**: Simple math par useMemo na lagayein.
+- **Context API**: Provider ke value object par useMemo lagana zaroori hai.`,
+      },
+    },
+  ],
+  quiz: [
+  {
+    "q": {
+      "en": "What is the primary difference between useMemo and useCallback?",
+      "hi": "useMemo aur useCallback ke beech primary antar kya hai?"
+    },
+    "options": [
+      {
+        "en": "useMemo runs on the server while useCallback runs in the browser",
+        "hi": "useMemo server par chalta hai"
+      },
+      {
+        "en": "useMemo caches the returned value of a function, whereas useCallback caches the function instance itself",
+        "hi": "useMemo function ke return value ko cache karta hai, jabki useCallback function instance ko cache karta hai"
+      },
+      {
+        "en": "useCallback does not support dependency arrays",
+        "hi": "useCallback mein dependency array nahi hota"
+      },
+      {
+        "en": "useMemo converts JavaScript to WebAssembly",
+        "hi": "WebAssembly banata hai"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "useMemo executes the function and caches the result. useCallback caches the function reference itself without executing it.",
+      "hi": "useMemo function chala kar uska result cache karta hai, jabki useCallback function ka memory reference cache karta hai."
+    }
+  },
+  {
+    "q": {
+      "en": "Passing a useCallback handler to <button onClick={fn}> without any React.memo child component provides what performance benefit?",
+      "hi": "Bina kisi React.memo child ke normal <button onClick={fn}> par useCallback lagane se kya performance benefit milta hai?"
+    },
+    "options": [
+      {
+        "en": "It doubles the button click speed",
+        "hi": "Click speed double ho jaati hai"
+      },
+      {
+        "en": "Zero performance benefit; in fact, it adds minor overhead for dependency comparisons",
+        "hi": "Bilkul zero fayda; ulta dependency check karne ka thoda extra overhead badh jata hai"
+      },
+      {
+        "en": "It reduces memory usage by 90%",
+        "hi": "Memory 90% kam karta hai"
+      },
+      {
+        "en": "It turns the button into a link",
+        "hi": "Link bana deta hai"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "Native HTML DOM elements like <button> always re-render when their parent renders. useCallback only helps when passed to children wrapped in React.memo.",
+      "hi": "Normal buttons parent render hone par re-render hote hi hain. useCallback tabhi faydemand hota hai jab child React.memo se wrapped ho."
+    }
+  },
+  {
+    "q": {
+      "en": "Why is wrapping const total = useMemo(() => a + b, [a, b]) considered bad practice?",
+      "hi": "const total = useMemo(() => a + b, [a, b]) likhna bad practice kyun mana jata hai?"
+    },
+    "options": [
+      {
+        "en": "useMemo cannot perform addition",
+        "hi": "useMemo addition nahi kar sakta"
+      },
+      {
+        "en": "The overhead of allocating useMemo and comparing dependencies is greater than the cost of simple arithmetic addition",
+        "hi": "useMemo allocate karne aur dependency compare karne ka kharcha a + b calculate karne se zyada hota hai"
+      },
+      {
+        "en": "Numbers cannot be memoized in React",
+        "hi": "Numbers memoize nahi ho sakte"
+      },
+      {
+        "en": "It throws a syntax error",
+        "hi": "Syntax error aata hai"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "Simple arithmetic operations are executed in nanoseconds. The overhead of useMemo memory allocation and dependency checks exceeds the calculation cost.",
+      "hi": "Chhoti-moti calculations nanoseconds mein hoti hain. useMemo ka internal overhead a + b se zyada heavy hota hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the core architectural purpose of useMemo & useCallback: Memoization in React in the modern full-stack MERN ecosystem?",
+      "hi": "Modern full-stack MERN ecosystem mein useMemo & useCallback: Performance Optimization ka mukhya architectural maksad kya hota hai?"
+    },
+    "options": [
+      {
+        "en": "It manages physical computer cooling and power supply",
+        "hi": "Ye physical computer cooling aur power supply manage karta hai"
+      },
+      {
+        "en": "It provides structured, robust, and scalable patterns for handling usememo & usecallback: memoization in react with high performance and maintainability",
+        "hi": "Ye high performance aur maintainability ke saath useMemo & useCallback: Performance Optimization ko handle karne ka structured aur scalable pattern provide karta hai"
+      },
+      {
+        "en": "It completely replaces JavaScript with binary machine code in browser tabs",
+        "hi": "Ye browser tabs mein JavaScript ko binary machine code se replace karta hai"
+      },
+      {
+        "en": "It is only used for printing documents to physical printers",
+        "hi": "Ye sirf physical printers par documents print karne ke liye hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "useMemo & useCallback: Memoization in React establishes clean separation of concerns, ensuring predictable data flow, robust error handling, and optimal runtime performance in production.",
+      "hi": "useMemo & useCallback: Performance Optimization clean architecture aur separation of concerns deta hai jisse application scalable aur maintainable banti hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What critical development bottleneck or anti-pattern does useMemo & useCallback: Memoization in React directly resolve?",
+      "hi": "useMemo & useCallback: Performance Optimization kis critical development bottleneck ya anti-pattern ko seedhe solve karta hai?"
+    },
+    "options": [
+      {
+        "en": "It replaces chaotic, tightly coupled ad-hoc logic with declarative, predictable control flow and structured data contracts",
+        "hi": "Ye chaotic aur tightly coupled logic ko hata kar declarative, predictable flow aur structured data contracts deta hai"
+      },
+      {
+        "en": "It forces the operating system to shut down when errors occur",
+        "hi": "Error aane par ye operating system band kar deta hai"
+      },
+      {
+        "en": "It deletes all database records older than 24 hours automatically",
+        "hi": "Ye 24 ghante purane DB records delete karta hai"
+      },
+      {
+        "en": "It blocks all outgoing HTTP network requests to conserve bandwidth",
+        "hi": "Ye bandwidth bachane ke liye network requests block karta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Without useMemo & useCallback: Memoization in React, applications suffer from brittle code, maintenance overhead, and unhandled edge cases that manifest as production crashes.",
+      "hi": "useMemo & useCallback: Performance Optimization ke bina code brittle ho jata hai aur production mein unexpected errors aate hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When reasoning about useMemo & useCallback: Memoization in React, how is its mental model best conceptualized through real-world analogies?",
+      "hi": "useMemo & useCallback: Performance Optimization ko real-world analogies ke zariye kaise best samjha ja sakta hai?"
+    },
+    "options": [
+      {
+        "en": "As a completely offline computer with zero network or database connections",
+        "hi": "Ek offline computer ki tarah jisme koi connection na ho"
+      },
+      {
+        "en": "As a disciplined, coordinated workflow where inputs are validated and processed through standardized checkpoints rather than ad-hoc handling",
+        "hi": "Ek disciplined workflow ki tarah jahan data ko structured checkpoints ke zariye step-by-step process kiya jata hai"
+      },
+      {
+        "en": "As a random number generator with non-deterministic output",
+        "hi": "Random number generator ki tarah jiska koi niyam na ho"
+      },
+      {
+        "en": "As a static text document that cannot be modified or read",
+        "hi": "Static text document jo padha na ja sake"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Real-world workflow analogies help engineers visualize component boundaries, request lifecycles, and data transformations intuitively.",
+      "hi": "Real-world analogies component boundaries aur request lifecycle ko visual aur intuitive banati hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When declaring and implementing useMemo & useCallback: Memoization in React, what syntactic convention is essential to prevent runtime errors?",
+      "hi": "useMemo & useCallback: Performance Optimization ko declare aur implement karte waqt kaunsa syntax niyam runtime errors rokne ke liye zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Adhering strictly to required parameters, handling asynchronous promises/callbacks cleanly, and verifying return value types",
+        "hi": "Zaroori parameters sahi pass karna, async promises ko handle karna aur return value types verify karna"
+      },
+      {
+        "en": "Wrapping every line of code inside an eval() execution block",
+        "hi": "Har line ko eval() block mein wrap karna"
+      },
+      {
+        "en": "Omitting import and require statements to reduce file size",
+        "hi": "File size ghatane ke liye import statements hatana"
+      },
+      {
+        "en": "Writing all code on a single continuous line without whitespace",
+        "hi": "Bina whitespace ke single line par code likhna"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Following standard ES6+ syntax contracts and properly handling promise resolution ensures execution safety and eliminates TypeError exceptions.",
+      "hi": "ES6+ syntax aur promise handling ke standard rules follow karne se TypeError aur crashes nahi aate."
+    }
+  },
+  {
+    "question": {
+      "en": "What is a common pitfall developers encounter when working with useMemo & useCallback: Memoization in React?",
+      "hi": "useMemo & useCallback: Performance Optimization ke saath kaam karte waqt developers aksar kaunsi aam galati karte hain?"
+    },
+    "options": [
+      {
+        "en": "Writing unit tests before implementing features",
+        "hi": "Feature likhne se pehle unit tests likhna"
+      },
+      {
+        "en": "Failing to handle failure edge cases, mutating shared state directly, or neglecting defensive validation guard clauses",
+        "hi": "Failure edge cases ko handle na karna, shared state direct mutate karna ya validation guard clauses na lagana"
+      },
+      {
+        "en": "Using strict equality checks (===) instead of loose equality (==)",
+        "hi": "Loose equality ke badle strict equality use karna"
+      },
+      {
+        "en": "Writing clear inline code documentation",
+        "hi": "Clear inline code comments likhna"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Neglecting edge cases and error handling causes silent regressions and race conditions that surface under concurrent user workloads.",
+      "hi": "Edge cases aur error handling miss karne se high-traffic production load mein silent bugs paida hote hain."
+    }
+  },
+  {
+    "question": {
+      "en": "According to production best practices, how should useMemo & useCallback: Memoization in React be architected for enterprise-grade stability?",
+      "hi": "Production best practices ke mutabiq enterprise-grade stability ke liye useMemo & useCallback: Performance Optimization ko kaise architect karna chahiye?"
+    },
+    "options": [
+      {
+        "en": "Enforce modular boundaries, validate all incoming payloads against schemas, log structured context, and maintain pure functions where possible",
+        "hi": "Modular boundaries enforce karein, payloads ko schema se validate karein, structured logs rakhein aur pure functions use karein"
+      },
+      {
+        "en": "Hardcode sensitive database connection strings directly in client-side files",
+        "hi": "Database passwords ko client files mein hardcode karna"
+      },
+      {
+        "en": "Disable all linter rules and type warnings globally",
+        "hi": "Linter aur type warnings ko globally disable karna"
+      },
+      {
+        "en": "Store all user session variables in global un-scoped memory arrays",
+        "hi": "Global memory arrays mein sessions store karna"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Enterprise-grade code prioritizes modularity, strict input validation, structured observability, and stateless designs.",
+      "hi": "Production hardening ke liye modular code, schema validation aur observability standard rules hote hain."
+    }
+  },
+  {
+    "question": {
+      "en": "How does proper optimization of useMemo & useCallback: Memoization in React impact application memory and CPU consumption?",
+      "hi": "useMemo & useCallback: Performance Optimization ko sahi dhang se optimize karne par application memory aur CPU par kya asar padta hai?"
+    },
+    "options": [
+      {
+        "en": "It increases server CPU temperature to 100 degrees Celsius",
+        "hi": "Server CPU temperature 100 degrees kar deta hai"
+      },
+      {
+        "en": "It minimizes redundant computations, eliminates memory leaks from uncleaned references, and maintains low latency under high concurrency",
+        "hi": "Ye redundant computations ghatata hai, memory leaks khatam karta hai aur high concurrency mein low latency maintain karta hai"
+      },
+      {
+        "en": "It doubles heap RAM allocation unconditionally",
+        "hi": "Heap RAM ko zabardasti double karta hai"
+      },
+      {
+        "en": "Optimization has zero measurable impact in modern web engines",
+        "hi": "Modern web engines par optimization ka koi asar nahi hota"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Preventing unnecessary allocations and cleaning up resources ensures low garbage collection pressure and predictable response times.",
+      "hi": "Memory leak rokne aur unnecessary allocations hatane se Garbage Collector par load kam rehta hai aur response fast rehta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What security principle is non-negotiable when handling data within useMemo & useCallback: Memoization in React?",
+      "hi": "useMemo & useCallback: Performance Optimization mein data handle karte waqt kaunsa security principle non-negotiable hota hai?"
+    },
+    "options": [
+      {
+        "en": "Never trust client-supplied input: always sanitize, authenticate, authorize, and validate against strict schemas on the server",
+        "hi": "Client data par blind trust na karein: server par hamesha sanitize, authenticate, authorize aur validate karein"
+      },
+      {
+        "en": "Trust all requests coming from mobile devices or web browsers blindly",
+        "hi": "Mobile ya browser se aane wali requests par blind trust karein"
+      },
+      {
+        "en": "Disable HTTPS and SSL certificates to maximize raw network throughput",
+        "hi": "Network throughput ke liye HTTPS band karein"
+      },
+      {
+        "en": "Expose database admin credentials to all registered users",
+        "hi": "Database admin credentials sabhi users ko expose karein"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Zero-Trust security dictates that every incoming request and data mutation must be validated and authenticated server-side before processing.",
+      "hi": "Zero-Trust security ke mutabiq har incoming mutation ko server par strictly validate aur authenticate kiya jana chahiye."
+    }
+  },
+  {
+    "question": {
+      "en": "How does asynchronous non-blocking execution operate in useMemo & useCallback: Memoization in React?",
+      "hi": "useMemo & useCallback: Performance Optimization mein asynchronous non-blocking execution kaise kaam karta hai?"
+    },
+    "options": [
+      {
+        "en": "It freezes the entire operating system until each operation completes",
+        "hi": "Har operation complete hone tak operating system freeze rehta hai"
+      },
+      {
+        "en": "I/O operations return Promises or accept callbacks, delegating work to background threads/queues while the main thread remains free to handle incoming tasks",
+        "hi": "I/O operations Promises return karte hain aur background queues use karke main thread ko baaki requests ke liye free rakhte hain"
+      },
+      {
+        "en": "Async operations execute in reverse alphabetical order automatically",
+        "hi": "Async operations reverse alphabetical order mein chalte hain"
+      },
+      {
+        "en": "Async code only executes when triggered manually by a user click",
+        "hi": "Sirf manual user click par async code chalta hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Non-blocking asynchronous operations resolve via microtasks or event loop queues, ensuring the runtime thread serves concurrent requests smoothly.",
+      "hi": "Non-blocking model main thread ko free rakhta hai taaki server bina rukaawat ke multiple users ko simultaneously serve kar sake."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the recommended pattern for propagating errors that occur in useMemo & useCallback: Memoization in React?",
+      "hi": "useMemo & useCallback: Performance Optimization mein error aane par unhe propagate karne ka recommended pattern kya hai?"
+    },
+    "options": [
+      {
+        "en": "Intercepting the error, enriching it with operational context, and delegating to a centralized error handler or error boundary",
+        "hi": "Error ko intercept karna, debug context add karna, aur centralized error handler ya error boundary ko pass karna"
+      },
+      {
+        "en": "Swallowing errors silently with empty catch {} blocks to hide problems from logs",
+        "hi": "Khaali catch {} blocks se errors ko silently daba dena taaki logs mein na dikhein"
+      },
+      {
+        "en": "Shutting down the server machine power immediately",
+        "hi": "Server machine power turant band kar dena"
+      },
+      {
+        "en": "Sending internal raw stack traces and database credentials to end-user browsers",
+        "hi": "Raw stack trace aur DB passwords browser par bhej dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Centralized error propagation provides complete operational observability while shielding internal infrastructure details from end users.",
+      "hi": "Centralized error handling se system mein transparency rehti hai aur user ko clean, safe error messages milte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When authoring unit or integration tests for useMemo & useCallback: Memoization in React, what must the test suite assert?",
+      "hi": "useMemo & useCallback: Performance Optimization ke liye automated tests likhte waqt test suite ko kya assert karna zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Only that the JavaScript file can be saved to disk",
+        "hi": "Sirf ye ki file disk par save ho sake"
+      },
+      {
+        "en": "Both the happy path (expected inputs producing valid outputs) AND boundary edge cases (null, empty arrays, network timeouts, invalid types)",
+        "hi": "Happy path (valid data) AUR boundary edge cases (null, empty array, network timeout, invalid types) dono ko verify karna"
+      },
+      {
+        "en": "That the test suite takes at least 24 hours to finish running",
+        "hi": "Test suite ko 24 ghante chalna chahiye"
+      },
+      {
+        "en": "Testing is considered unnecessary in modern full-stack development",
+        "hi": "Modern development mein testing zaroori nahi hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Robust automated test suites verify both standard valid scenarios and defensive failure modes to prevent regressions during deployments.",
+      "hi": "Achhi testing valid inputs aur failure states dono ko assert karti hai taaki production deployments safe rahein."
+    }
+  },
+  {
+    "question": {
+      "en": "How does modular design enhance code maintainability in useMemo & useCallback: Memoization in React?",
+      "hi": "Modular design useMemo & useCallback: Performance Optimization mein code maintainability ko kaise badhata hai?"
+    },
+    "options": [
+      {
+        "en": "By isolating distinct responsibilities into small, reusable, and independently testable units following the Single Responsibility Principle",
+        "hi": "Single Responsibility Principle ke zariye alag-alag kaamo ko chote, reusable aur testable units mein baant kar"
+      },
+      {
+        "en": "By combining all frontend, backend, and database code into a single 50,000-line script",
+        "hi": "Saara code ek hi 50,000-line script mein daal kar"
+      },
+      {
+        "en": "By removing all function names and replacing them with random numbers",
+        "hi": "Function names hata kar random numbers likhna"
+      },
+      {
+        "en": "By forbidding code comments and documentation across the repository",
+        "hi": "Comments aur documentation ban kar dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Modularity reduces cognitive load, simplifies debugging, prevents ripple effects during changes, and enables seamless team collaboration.",
+      "hi": "Modular code se readability badhti hai, debugging aasan hoti hai aur ek jagah badlav karne par doosri jagah bugs nahi aate."
+    }
+  },
+  {
+    "question": {
+      "en": "When application traffic scales 100x, how should useMemo & useCallback: Memoization in React be architected to support horizontal scaling?",
+      "hi": "Traffic 100x badhne par useMemo & useCallback: Performance Optimization ko horizontally scale karne ke liye kya design approach honi chahiye?"
+    },
+    "options": [
+      {
+        "en": "Ensure the component/service is completely stateless, offload shared session/state to Redis/MongoDB, and distribute traffic via a load balancer",
+        "hi": "Service ko completely stateless banayein, shared state ko Redis/DB par shift karein aur load balancer se traffic distribute karein"
+      },
+      {
+        "en": "Store all user session variables in local in-memory JavaScript objects on the web server",
+        "hi": "Server ki local RAM mein session variables store karna"
+      },
+      {
+        "en": "Reboot the production server manually whenever memory usage exceeds 10%",
+        "hi": "Memory 10% cross hote hi server manually reboot karna"
+      },
+      {
+        "en": "Block 95% of incoming users using firewall rules",
+        "hi": "95% users ko firewall se block kar dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Stateless service architecture guarantees that any container instance can handle any incoming request, enabling dynamic auto-scaling without session loss.",
+      "hi": "Stateless architecture auto-scaling ka base hai jahan naye containers bina session loss ke instant traffic handle kar sakte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "In the full-stack MERN paradigm, where does useMemo & useCallback: Memoization in React properly belong and execute?",
+      "hi": "Full-stack MERN architecture mein useMemo & useCallback: Performance Optimization kahan belong karta hai aur kahan execute hota hai?"
+    },
+    "options": [
+      {
+        "en": "In its designated architectural tier (Client browser UI, Express API backend, or MongoDB database) with clean API contracts connecting them",
+        "hi": "Apne designated tier (Browser UI, Express API backend, ya MongoDB) mein clean API contracts ke saath"
+      },
+      {
+        "en": "Directly on the end-user's local router firmware",
+        "hi": "User ke local router firmware par"
+      },
+      {
+        "en": "Inside the computer motherboard BIOS chip",
+        "hi": "Motherboard BIOS chip mein"
+      },
+      {
+        "en": "All MERN code runs strictly inside the MongoDB database engine",
+        "hi": "Saara MERN code sirf MongoDB ke andar chalta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Maintaining clear structural boundaries between client rendering, backend orchestration, and database persistence is the defining trait of MERN.",
+      "hi": "Client UI, backend server aur database ke beech saaf boundary maintain karna MERN architecture ka mukhya niyam hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What telemetry metric or observability signal is most crucial for diagnosing issues with useMemo & useCallback: Memoization in React in production?",
+      "hi": "Production mein useMemo & useCallback: Performance Optimization ki problems diagnose karne ke liye sabse zaroori telemetry metric kaunsi hoti hai?"
+    },
+    "options": [
+      {
+        "en": "The desktop monitor brightness setting of the client",
+        "hi": "Client ke monitor ki brightness"
+      },
+      {
+        "en": "Latency percentiles (p95/p99), error rates (HTTP 4xx/5xx), throughput (RPS), and heap memory allocation deltas",
+        "hi": "Latency percentiles (p95/p99), error rates (4xx/5xx), throughput (RPS), aur heap memory allocation deltas"
+      },
+      {
+        "en": "The number of files in the project's root folder",
+        "hi": "Root folder mein files ki sankhya"
+      },
+      {
+        "en": "The physical keyboard model used by the engineer",
+        "hi": "Engineer ke keyboard ka model"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Observability platforms monitor p95/p99 latencies, error frequencies, and memory utilization to identify bottlenecks and regressions early.",
+      "hi": "p95/p99 latencies aur error rates monitor karne se crashes aane se pehle hi bottlenecks pakad mein aa jaate hain."
+    }
+  },
+  {
+    "question": {
+      "en": "Why is eliminating unintended side effects essential when authoring logic for useMemo & useCallback: Memoization in React?",
+      "hi": "useMemo & useCallback: Performance Optimization ka logic likhte waqt unintended side effects ko khatam karna kyun zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Side effects introduce unpredictability, corrupt shared state, cause race conditions, and make concurrent code nearly impossible to debug",
+        "hi": "Side effects se code unpredictable banta hai, shared state corrupt hoti hai aur race conditions create hoti hain"
+      },
+      {
+        "en": "Side effects permanently erase the developer's Git commit history",
+        "hi": "Git history permanently delete ho jaati hai"
+      },
+      {
+        "en": "Side effects are strictly required by the JavaScript ECMAScript standard",
+        "hi": "ECMAScript mein side effects required hain"
+      },
+      {
+        "en": "Side effects make all algorithms execute in O(1) time",
+        "hi": "Saare algorithms O(1) time mein chalte hain"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Pure and predictable logic produces the same output for identical inputs, guaranteeing thread safety, easy caching, and high reliability.",
+      "hi": "Pure logic se shared state safe rehti hai aur same input par hamesha consistent aur predictable output milta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "How should client-side state be kept in sync with backend server mutations in useMemo & useCallback: Memoization in React?",
+      "hi": "useMemo & useCallback: Performance Optimization mein client-side state aur backend server data ko sync mein kaise rakha jata hai?"
+    },
+    "options": [
+      {
+        "en": "By forcing a complete hard page refresh every 3 seconds",
+        "hi": "Har 3 second mein poora page hard refresh karke"
+      },
+      {
+        "en": "Using optimistic UI updates with error rollback, automated query cache invalidation (TanStack Query/RTK), or WebSocket change streams",
+        "hi": "Optimistic UI updates with rollback, automated query cache invalidation ya WebSocket push streams use karke"
+      },
+      {
+        "en": "By disabling all database update operations permanently",
+        "hi": "Database updates ko permanently band karke"
+      },
+      {
+        "en": "By saving user state in local CSV files on the server desktop",
+        "hi": "Server desktop par CSV files save karke"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Modern full-stack architectures synchronize state seamlessly using query cache invalidation, optimistic updates, and real-time socket events.",
+      "hi": "Modern apps cache invalidation aur optimistic UI use karti hain taaki UI bina screen reload ke instantly updated rahe."
+    }
+  },
+  {
+    "question": {
+      "en": "Why is thorough resource cleanup (clearing timers, closing sockets, aborting in-flight requests) critical in useMemo & useCallback: Memoization in React?",
+      "hi": "useMemo & useCallback: Performance Optimization mein resource cleanup (timers clear karna, sockets band karna, network abort karna) kyun zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "To prevent memory leaks where unreachable or orphaned objects remain retained in heap memory, causing gradual performance degradation and crashes",
+        "hi": "Memory leaks rokne ke liye taaki unneeded objects RAM mein jama na hon aur server crash na ho"
+      },
+      {
+        "en": "To delete the client's local disk partition",
+        "hi": "Client ka local disk partition delete karne ke liye"
+      },
+      {
+        "en": "Because JavaScript engines allow only 5 variables in RAM",
+        "hi": "JS engine sirf 5 variables allow karta hai"
+      },
+      {
+        "en": "Cleanup is unnecessary because garbage collection handles 100% of event listeners automatically",
+        "hi": "Cleanup ki zaroorat nahi hoti"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Unclosed connections and dangling event listeners create references that prevent garbage collection, leading to severe memory leaks over time.",
+      "hi": "Dangling listeners aur unclosed connections memory leaks banate hain jo V8 heap ko exhaust karke process crash kar dete hain."
+    }
+  }
+],
+};

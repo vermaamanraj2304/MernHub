@@ -1,0 +1,1086 @@
+export default {
+  id: "react-conditional-rendering",
+  title: {
+    en: "Conditional Rendering Patterns",
+    hi: "Conditional Rendering Patterns (&&, Ternary, Early Return)",
+  },
+  difficulty: "Beginner",
+  readTime: 10,
+  sections: [
+    {
+      type: "concept",
+      heading: {
+        en: "1. What is Conditional Rendering?",
+        hi: "1. Conditional Rendering Kya Hai?",
+      },
+      body: {
+        en: `In React, **Conditional Rendering** means displaying different UI elements or components based on different conditions (such as whether a user is logged in, whether data is still loading, or whether a shopping cart is empty).
+
+Conditional rendering in React works the exact same way conditions work in JavaScript: using standard \`if\` statements, ternary operators (\`?\`), logical AND (\`&&\`), and object lookups.
+
+### The 4 Primary Conditional Patterns:
+1. **Early Return**: Returning early before the main JSX (ideal for loading spinners, error banners, or authentication guards).
+2. **Ternary Operator (\`condition ? A : B\`)**: Choosing between two mutually exclusive UI states.
+3. **Logical AND (\`condition && A\`)**: Rendering an element only when a condition is strictly truthy.
+4. **Enum / Lookup Object**: Mapping 3 or more distinct states (e.g. \`pending\`, \`shipped\`, \`delivered\`, \`cancelled\`) without nested if-else ladders.`,
+        hi: `React mein **Conditional Rendering** ka matlab hai sharton (conditions) ke aadhar par alag-alag UI dikhana—jaise user login hai ya nahi, data load ho raha hai ya nahi, ya shopping cart khali hai ya bhara hua.
+
+React mein conditions lagane ke liye koi naya syntax nahi hai; yeh pure JavaScript ke \`if\`, ternary (\`?\`), logical AND (\`&&\`) aur lookup objects se hota hai.
+
+### 4 Mukhya Patterns:
+1. **Early Return**: Main UI se pehle hi return kar dena (loading spinners ya error screens ke liye best).
+2. **Ternary Operator (\`? :\`)**: Do alag-alag UI options mein se chunne ke liye.
+3. **Logical AND (\`&&\`)**: Sirf tabhi element render karna jab shart sahi (truthy) ho.
+4. **Lookup Object Mapping**: 3 ya usse zyada states ko bina lambe if-else ke saaf tareeqe se render karna.`,
+      },
+    },
+    {
+      type: "concept",
+      heading: {
+        en: "2. The Infamous Falsy Zero (0) Trap",
+        hi: "2. Sabse Bada Trap: Falsy Zero (0) Screen Par Print Hona",
+      },
+      body: {
+        en: `The most notorious beginner bug in React conditional rendering is the **Falsy Zero Trap** when using the \`&&\` operator.
+
+### How Logical AND (\`&&\`) Works in JavaScript:
+In JavaScript, \`A && B\` evaluates \`A\`. If \`A\` is falsy, **JavaScript returns A itself**, NOT boolean \`false\`!
+- If \`A\` is \`false\`, \`null\`, or \`undefined\`, React renders **nothing**.
+- BUT if \`A\` is the number \`0\`, React considers \`0\` a valid renderable number and **prints the literal number '0' on your website**!
+
+\`\`\`jsx
+// ❌ BUGGY: When unreadCount is 0, renders a literal "0" on the screen!
+<div>{unreadCount && <Badge count={unreadCount} />}</div>
+
+// ✅ FIX 1: Explicit comparison returning true/false
+<div>{unreadCount > 0 && <Badge count={unreadCount} />}</div>
+
+// ✅ FIX 2: Boolean casting
+<div>{Boolean(unreadCount) && <Badge count={unreadCount} />}</div>
+\`\`\``,
+        hi: `React conditional rendering mein sabse common bug hota hai **Falsy Zero Trap**.
+
+### JavaScript Mein \`&&\` Kaise Kaam Karta Hai:
+JavaScript mein \`A && B\` mein agar \`A\` falsy hai, toh JavaScript **seedhe A ki value return kar deta hai**!
+- Agar value \`false\`, \`null\` ya \`undefined\` hai, toh React screen par kuch nahi dikhata.
+- Lekin agar value **number \`0\`** hai, toh React use ek number samajhkar **screen par '0' print kar deta hai**!
+
+\`\`\`jsx
+// ❌ BUG: Agar unreadCount 0 hai, toh screen par "0" likha aa jata hai!
+<div>{unreadCount && <Badge />}</div>
+
+// ✅ SOLUTION: Explicit check lagayein
+<div>{unreadCount > 0 && <Badge />}</div>
+\`\`\``,
+      },
+    },
+    {
+      type: "analogy",
+      heading: {
+        en: "Real-Life Analogy: The Indian Railway PNR Status Board",
+        hi: "Real-Life Analogy: Indian Railway Ka PNR Status Board",
+      },
+      body: {
+        en: `Consider checking your IRCTC Train Ticket confirmation on the railway station digital display:
+
+- **Early Return (No Ticket Found)**:
+  - If you type an invalid 10-digit PNR number, the screen doesn't show an empty train with zero seats. It immediately displays a red alert: *"Invalid PNR Number. Please check your ticket"* (**Early return guarding against bad data**).
+- **Ternary Operator (Payment Status)**:
+  - Is the ticket paid? If yes -> Green *"Paid Online via UPI"*; If no -> Red *"Payment Failed - Amount Refunded"* (**Ternary choosing between two states**).
+- **Logical AND (\`&&\`) (Meal Preference)**:
+  - Did the passenger opt for meals during booking? If \`hasOptedMeals === true\`, show *"Vegetarian Thali Assigned"*; otherwise, render completely blank (**\`&&\` showing optional perk**).
+- **Enum Lookup (Ticket Status)**:
+  - \`CNF\`: Green confirmed berth (Coach B2, Berth 42).
+  - \`RAC\`: Orange reservation against cancellation.
+  - \`WL\`: Red Waitlisted #14.`,
+        hi: `Railway station ke PNR status board se samjhein:
+
+- **Early Return (Galat PNR)**:
+  - Agar aapne galat PNR daal diya, toh screen train ke dabbe dikhane ke bajaye turant red error dikhati hai: *"Galat PNR Number"* (**Early return**).
+- **Ternary Operator (Payment Pass Ya Fail)**:
+  - Kya payment ho gaya? Haan toh Green *"Paid"*, nahi toh Red *"Refunded"* (**Ternary 2-state choice**).
+- **Logical AND (\`&&\`) (Khana Shamil Hai Ya Nahi)**:
+  - Agar passenger ne khana choose kiya hai (\`hasMeal === true\`), toh thali dikhao, warna kuch mat dikhao (**\`&&\` condition**).
+- **Enum Lookup (Berth Status)**:
+  - \`CNF\` -> Green Coach/Seat number.
+  - \`RAC\` -> Orange RAC status.
+  - \`WL\` -> Red Waitlist number.`,
+      },
+    },
+    {
+      type: "syntax",
+      heading: {
+        en: "Syntax: The 4 Patterns in Code",
+        hi: "Syntax: Charo Patterns Ka Code Structure",
+      },
+      body: {
+        en: `### 1. Early Return Pattern:
+\`\`\`jsx
+if (isLoading) return <LoadingSpinner />;
+if (error) return <ErrorMessage message={error} />;
+return <MainContent data={data} />;
+\`\`\`
+
+### 2. Ternary Operator:
+\`\`\`jsx
+<button className="btn">
+  {isFollowing ? "Unfollow" : "Follow"}
+</button>
+\`\`\`
+
+### 3. Logical AND (\`&&\`):
+\`\`\`jsx
+{isPremiumUser && <span className="badge">⭐ PRO</span>}
+\`\`\`
+
+### 4. Enum Lookup Object (Clean alternative to nested ternaries):
+\`\`\`jsx
+const STATUS_BADGES = {
+  pending: <span className="bg-amber-500">Pending Review</span>,
+  approved: <span className="bg-emerald-500">Approved</span>,
+  rejected: <span className="bg-rose-500">Rejected</span>
+};
+
+return <div>{STATUS_BADGES[status] || <span>Unknown</span>}</div>;
+\`\`\``,
+        hi: `### 1. Early Return:
+\`\`\`jsx
+if (isLoading) return <Spinner />;
+if (error) return <ErrorAlert />;
+return <MainContent />;
+\`\`\`
+
+### 2. Ternary Operator:
+\`\`\`jsx
+<button>{isLoggedIn ? "Logout" : "Login"}</button>
+\`\`\`
+
+### 3. Logical AND (\`&&\`):
+\`\`\`jsx
+{hasDiscount && <span>Special Offer!</span>}
+\`\`\`
+
+### 4. Lookup Object (Multi-state ke liye):
+\`\`\`jsx
+const BADGES = {
+  active: <Badge color="green" />,
+  banned: <Badge color="red" />
+};
+
+return <div>{BADGES[userStatus]}</div>;
+\`\`\``,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 1: Early Return for Loading and Error Guards",
+        hi: "Example 1: Loading Aur Error States Ke Liye Early Return",
+      },
+      body: {
+        en: `Handling async data states gracefully with early returns for loading skeletons, network errors, and empty arrays.`,
+        hi: `Loading spinner, network error aur empty data ke liye early return guards lagana.`,
+      },
+      code: {
+        language: "jsx",
+        filename: "UserListWithGuards.jsx",
+        snippet: `import React, { useState } from "react";
+
+export default function UserListWithGuards({
+  isLoading = false,
+  errorMessage = null,
+  users = [
+    { id: 1, name: "Pooja Hegde", role: "Developer" },
+    { id: 2, name: "Amit Trivedi", role: "Designer" }
+  ]
+}) {
+  // Guard 1: Loading State Early Return
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8 text-indigo-600 animate-pulse">
+        <span className="text-sm font-semibold">Loading team members...</span>
+      </div>
+    );
+  }
+
+  // Guard 2: Error State Early Return
+  if (errorMessage) {
+    return (
+      <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm">
+        <strong>Error:</strong> {errorMessage}
+      </div>
+    );
+  }
+
+  // Guard 3: Empty State Early Return
+  if (users.length === 0) {
+    return (
+      <div className="p-6 text-center text-slate-400 dark:text-slate-500 text-sm">
+        No team members found. Click "Add User" to invite someone.
+      </div>
+    );
+  }
+
+  // Main Happy Path JSX
+  return (
+    <ul className="divide-y divide-slate-100 dark:divide-slate-800 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden max-w-md">
+      {users.map(u => (
+        <li key={u.id} className="p-3 flex justify-between items-center text-sm">
+          <span className="font-semibold text-slate-800 dark:text-white">{u.name}</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+            {u.role}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 2: Fixing the Falsy Zero Bug in Badge Counts",
+        hi: "Example 2: Badge Count Mein Falsy Zero Bug Ko Solve Karna",
+      },
+      body: {
+        en: `Side-by-side comparison illustrating how the buggy \`count && ...\` pattern leaks zero onto the screen, and how \`count > 0 && ...\` renders cleanly.`,
+        hi: `Buggy vs Correct code: Zero count hone par screen par "0" print hone se rokna.`,
+      },
+      code: {
+        language: "jsx",
+        filename: "CartNotificationBell.jsx",
+        snippet: `import React, { useState } from "react";
+
+export default function CartNotificationBell() {
+  const [cartCount, setCartCount] = useState(0);
+
+  return (
+    <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-w-md space-y-6">
+      <h3 className="font-bold text-slate-900 dark:text-white">
+        Falsy Zero Demonstration
+      </h3>
+
+      <div className="flex items-center gap-6">
+        {/* ❌ BUGGY IMPLEMENTATION */}
+        <div className="relative inline-block p-2 rounded-xl bg-slate-100 dark:bg-slate-800">
+          <span className="text-xl">🔔</span>
+          {/* If cartCount is 0, JavaScript evaluates 0 && <span...>, rendering literal "0"! */}
+          <span className="text-xs text-rose-500 font-bold ml-1">
+            {cartCount && <span className="bg-red-500 text-white rounded-full px-1">NEW</span>}
+          </span>
+          <div className="text-[10px] text-slate-400 mt-1">Buggy: renders "0"</div>
+        </div>
+
+        {/* ✅ CORRECT IMPLEMENTATION */}
+        <div className="relative inline-block p-2 rounded-xl bg-slate-100 dark:bg-slate-800">
+          <span className="text-xl">🔔</span>
+          {/* Explicit comparison returns false; React renders nothing */}
+          {cartCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-indigo-600 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center shadow-sm">
+              {cartCount}
+            </span>
+          )}
+          <div className="text-[10px] text-emerald-500 mt-1">Clean: shows badge only if &gt; 0</div>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => setCartCount(c => c + 1)}
+          className="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold"
+        >
+          Add Item
+        </button>
+        <button
+          onClick={() => setCartCount(0)}
+          className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold"
+        >
+          Clear (Reset to 0)
+        </button>
+      </div>
+    </div>
+  );
+}`,
+      },
+    },
+    {
+      type: "example",
+      heading: {
+        en: "Example 3: Clean Multi-State Rendering via Lookup Object",
+        hi: "Example 3: Lookup Object Se Multi-State Order Tracker",
+      },
+      body: {
+        en: `Rendering 5 distinct shipment status milestones (Ordered, Packed, Shipped, Delivered, Cancelled) using a clean configuration lookup object instead of nested ternaries.`,
+        hi: `Nested ternary operators ki spaghetti se bachne ke liye configuration object se status badges render karna.`,
+      },
+      code: {
+        language: "jsx",
+        filename: "ShipmentStatusTracker.jsx",
+        snippet: `import React from "react";
+
+// Clean Lookup Object mapping order states to icons, colors, and descriptions
+const SHIPMENT_CONFIG = {
+  ordered: {
+    label: "Order Placed",
+    color: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
+    icon: "📝"
+  },
+  packed: {
+    label: "Packed in Warehouse",
+    color: "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300",
+    icon: "📦"
+  },
+  in_transit: {
+    label: "Out for Delivery",
+    color: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+    icon: "🚚"
+  },
+  delivered: {
+    label: "Delivered",
+    color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+    icon: "✅"
+  },
+  cancelled: {
+    label: "Cancelled & Refunded",
+    color: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300",
+    icon: "❌"
+  }
+};
+
+export default function ShipmentStatusTracker({ status = "in_transit" }) {
+  const currentConfig = SHIPMENT_CONFIG[status] || {
+    label: "Unknown Status",
+    color: "bg-slate-100 text-slate-700",
+    icon: "❓"
+  };
+
+  return (
+    <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 max-w-sm flex items-center gap-3">
+      <span className="text-2xl">{currentConfig.icon}</span>
+      <div>
+        <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+          Package Status
+        </p>
+        <span
+          className={\`inline-block mt-0.5 px-2.5 py-0.5 text-xs font-bold rounded-full \${currentConfig.color}\`}
+        >
+          {currentConfig.label}
+        </span>
+      </div>
+    </div>
+  );
+}`,
+      },
+    },
+    {
+      type: "mistakes",
+      heading: {
+        en: "Common Mistakes & How to Fix Them",
+        hi: "Aam Galatiyan Aur Unka Solution",
+      },
+      body: {
+        en: `### 1. The Falsy Zero Leak (\`count && <Badge />\`)
+- **Mistake**: When \`count\` is \`0\`, React prints \`0\` onto the web page because \`0\` is a valid renderable number in JSX.
+- **Fix**: Use boolean comparisons: \`count > 0 && <Badge />\` or \`Boolean(count) && <Badge />\`.
+
+### 2. Nested Ternary Spaghetti Code
+- **Mistake**: Writing \`a ? b ? <B /> : <C /> : d ? <D /> : <E />\`. Deeply nested ternaries are impossible to read, maintain, or review.
+- **Fix**: Extract child subcomponents, use Early Returns, or use an Enum Lookup Object.
+
+### 3. Calling Hooks Conditionally
+- **Mistake**: Writing \`if (isLoggedIn) { useEffect(...) }\` or \`if (!user) { const [state, setState] = useState(0); }\`. This violates the **Rules of Hooks**! React requires hooks to be called in the exact same order on every render.
+- **Fix**: Always call hooks at the top level of the component before any early returns.`,
+        hi: `### 1. Falsy Zero Bug (\`count && <Badge />\`)
+- **Galati**: \`count\` ke 0 hone par screen par literal "0" chhap jata hai.
+- **Solution**: Hamesha boolean condition lagayein: \`count > 0 && <Badge />\`.
+
+### 2. Nested Ternary Spaghetti
+- **Galati**: \`a ? b ? c : d : e\` jaise 4-level deep ternaries likhna jo padhne mein bohot mushkil hote hain.
+- **Solution**: Early return lagayein ya Lookup Object ka use karein.
+
+### 3. Hooks Ko Condition Ke Andar Call Karna
+- **Galati**: \`if (isLoggedIn) { useState() }\` likhna. Yeh **Rules of Hooks** ko tod deta hai aur React crash ho jata hai!
+- **Solution**: Saare hooks ko component ke sabse upar bina kisi condition ke call karein.`,
+      },
+    },
+    {
+      type: "tip",
+      heading: {
+        en: "Best Practices: Clean Conditional Rendering",
+        hi: "Clean Conditional Rendering Ke Best Practices",
+      },
+      body: {
+        en: `1. **Use Early Returns for Loading & Error Screens**: Clears away edge cases upfront, leaving the rest of the component dedicated to the clean "happy path".
+2. **Never Rely on Truthiness of Numbers with \`&&\`**: Always write \`items.length > 0 && ...\` instead of \`items.length && ...\`.
+3. **Use \`return null\` to Hide Components Completely**: If a component has nothing to display based on props, \`return null\` tells React to render nothing to the DOM.
+4. **Use Lookup Tables for 3+ States**: Statuses like \`"draft" | "review" | "published" | "archived"\` are best mapped via a configuration object.`,
+        hi: `1. **Loading Aur Error Ke Liye Early Return**: Shuru mein hi check karke return karne se main JSX clean rehta hai.
+2. **Numbers Par \`&&\` Lagate Waqt > 0 Check Karein**: Hamesha \`items.length > 0 && ...\` likhein.
+3. **Kuch Na Dikhane Ke Liye \`return null\` Karein**: Agar component ko kuch render nahi karna, toh \`return null\` karein.
+4. **3 Se Zyada States Ke Liye Lookup Object**: Multiple states ke liye lookup dictionary sabse clean approach hai.`,
+      },
+    },
+    {
+      type: "interview",
+      heading: {
+        en: "Top Interview Questions & Answers",
+        hi: "Top Interview Sawaal Aur Jawab",
+      },
+      body: {
+        en: `### Q1: Why does {items.length && <List />} render a literal "0" when items is an empty array?
+**Answer**:
+In JavaScript, the logical \`&&\` operator short-circuits and returns the value of the left operand if it is falsy. When \`items.length\` is \`0\`, the expression evaluates to the number \`0\`. Because numbers are valid renderable primitives in React (unlike \`false\`, \`null\`, or \`undefined\`), React renders the literal string \`"0"\` onto the DOM. To avoid this, write \`items.length > 0 && <List />\`.
+
+### Q2: Can you return null from a React component, and what does it do?
+**Answer**:
+Yes. Returning \`null\` tells React to render nothing to the DOM for that component. The component still goes through its normal lifecycle and hook executions, but its output in the Virtual DOM is empty.
+
+### Q3: Why is calling a React Hook inside an if statement strictly forbidden?
+**Answer**:
+React relies on the order in which hooks are called across renders to match hook state with internal Fiber linked-list cells. If a hook is called inside an \`if\` statement, skipping it on one render shifts the order of all subsequent hooks, causing React to mismatch state variables and throw an invariant violation crash.`,
+        hi: `### Q1: \`items.length && <List />\` empty array par "0" kyun print karta hai?
+**Jawab**:
+JavaScript mein \`&&\` left side ke falsy hone par wahi value return kar deta hai. Jab length 0 hoti hai toh result 0 hota hai. React number 0 ko valid content samajh kar screen par print kar deta hai. Bachne ke liye \`items.length > 0 && <List />\` likhein.
+
+### Q2: Kya component se \`return null\` kiya ja sakta hai?
+**Jawab**:
+Haan. \`return null\` karne se React DOM mein kuch bhi render nahi karta. Component ke hooks aur lifecycle chalte rehte hain par screen par koi HTML generate nahi hota.
+
+### Q3: Hooks ko \`if\` condition ke andar call karna kyun mana hai?
+**Jawab**:
+React Fiber internal linked list mein hooks ke sequence (order) par depend karta hai. Agar koi hook condition ke wajah se skip ho jaye, toh aage ke saare hooks ka order hil jata hai aur app crash ho jaati hai.`,
+      },
+    },
+    {
+      type: "summary",
+      heading: {
+        en: "Quick Summary: Conditional Rendering",
+        hi: "Quick Summary: Conditional Rendering",
+      },
+      body: {
+        en: `- **Standard JavaScript Rules**: Use \`if\`, ternaries (\`? :\`), logical AND (\`&&\`), and lookup objects.
+- **Avoid Falsy Zero**: Always write \`count > 0 && ...\` instead of \`count && ...\`.
+- **Early Returns**: Great for loading skeletons, auth guards, and error messages.
+- **return null**: Safely renders nothing to the browser DOM.
+- **Never Call Hooks Conditionally**: Always call hooks at the top level before conditional returns.`,
+        hi: `- **Standard JS Use Hota Hai**: \`if\`, ternary, \`&&\` aur lookup objects.
+- **Falsy Zero Se Bachein**: Hamesha \`count > 0 && ...\` likhein.
+- **Early Returns**: Loading, error aur auth checks ke liye best pattern.
+- **return null**: Screen par blank render karne ke liye.
+- **Hooks Top Level Par Rakhein**: Kisi bhi condition ke andar hooks na lagayein.`,
+      },
+    },
+  ],
+  quiz: [
+  {
+    "q": {
+      "en": "What will render on the screen if messages is an empty array ([]) and you write: <div>{messages.length && <p>New Message</p>}</div>?",
+      "hi": "Agar messages ek empty array hai toh <div>{messages.length && <p>New Message</p>}</div> screen par kya render karega?"
+    },
+    "options": [
+      {
+        "en": "Nothing at all",
+        "hi": "Kuch nahi"
+      },
+      {
+        "en": "A literal '0' text character",
+        "hi": "Ek literal '0' number text"
+      },
+      {
+        "en": "<p>New Message</p>",
+        "hi": "<p>New Message</p>"
+      },
+      {
+        "en": "A JavaScript TypeError",
+        "hi": "TypeError"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "messages.length evaluates to 0. 0 is falsy, so && returns 0. In JSX, the number 0 is rendered as text.",
+      "hi": "messages.length 0 hota hai, && operator 0 return karta hai, aur React screen par '0' print kar deta hai."
+    }
+  },
+  {
+    "q": {
+      "en": "What happens when a React component returns null?",
+      "hi": "Jab koi React component null return karta hai toh kya hota hai?"
+    },
+    "options": [
+      {
+        "en": "React unmounts the browser window",
+        "hi": "Browser window unmount ho jaati hai"
+      },
+      {
+        "en": "React renders nothing to the DOM for that component",
+        "hi": "React us component ke liye DOM mein kuch bhi render nahi karta"
+      },
+      {
+        "en": "It throws a RenderError",
+        "hi": "RenderError throw hota hai"
+      },
+      {
+        "en": "It renders a white <div> by default",
+        "hi": "White div render karta hai"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "Returning null instructs React to completely omit rendering any DOM nodes for that component while preserving its lifecycle.",
+      "hi": "null return karne se React us component ke liye koi bhi HTML DOM node generate nahi karta."
+    }
+  },
+  {
+    "q": {
+      "en": "Why is it invalid to put a useState hook inside an if (isLoggedIn) statement?",
+      "hi": "if (isLoggedIn) statement ke andar useState hook call karna invalid kyun hai?"
+    },
+    "options": [
+      {
+        "en": "useState only works for guest users",
+        "hi": "useState sirf guest users ke liye hota hai"
+      },
+      {
+        "en": "React depends on the exact call order of hooks across renders to match their state, which conditional calls break",
+        "hi": "React renders ke beech hooks ke exact call order par depend karta hai jo condition lagane se toot jata hai"
+      },
+      {
+        "en": "JavaScript does not allow functions inside if blocks",
+        "hi": "JS allow nahi karta"
+      },
+      {
+        "en": "Hooks can only be called from inside node_modules",
+        "hi": "Hooks sirf node_modules se call hote hain"
+      }
+    ],
+    "answerIndex": 1,
+    "explanation": {
+      "en": "React stores hook state in an internal linked list indexed by call order. Calling hooks conditionally disrupts this index and corrupts state.",
+      "hi": "React hooks ke state ko unke call hone ke order se track karta hai. Conditional calling se order toot jata hai aur app crash ho jaati hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the core architectural purpose of Conditional Rendering Patterns in the modern full-stack MERN ecosystem?",
+      "hi": "Modern full-stack MERN ecosystem mein Conditional Rendering Patterns (&&, Ternary, Early Return) ka mukhya architectural maksad kya hota hai?"
+    },
+    "options": [
+      {
+        "en": "It manages physical computer cooling and power supply",
+        "hi": "Ye physical computer cooling aur power supply manage karta hai"
+      },
+      {
+        "en": "It provides structured, robust, and scalable patterns for handling conditional rendering patterns with high performance and maintainability",
+        "hi": "Ye high performance aur maintainability ke saath Conditional Rendering Patterns (&&, Ternary, Early Return) ko handle karne ka structured aur scalable pattern provide karta hai"
+      },
+      {
+        "en": "It completely replaces JavaScript with binary machine code in browser tabs",
+        "hi": "Ye browser tabs mein JavaScript ko binary machine code se replace karta hai"
+      },
+      {
+        "en": "It is only used for printing documents to physical printers",
+        "hi": "Ye sirf physical printers par documents print karne ke liye hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Conditional Rendering Patterns establishes clean separation of concerns, ensuring predictable data flow, robust error handling, and optimal runtime performance in production.",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) clean architecture aur separation of concerns deta hai jisse application scalable aur maintainable banti hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What critical development bottleneck or anti-pattern does Conditional Rendering Patterns directly resolve?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) kis critical development bottleneck ya anti-pattern ko seedhe solve karta hai?"
+    },
+    "options": [
+      {
+        "en": "It replaces chaotic, tightly coupled ad-hoc logic with declarative, predictable control flow and structured data contracts",
+        "hi": "Ye chaotic aur tightly coupled logic ko hata kar declarative, predictable flow aur structured data contracts deta hai"
+      },
+      {
+        "en": "It forces the operating system to shut down when errors occur",
+        "hi": "Error aane par ye operating system band kar deta hai"
+      },
+      {
+        "en": "It deletes all database records older than 24 hours automatically",
+        "hi": "Ye 24 ghante purane DB records delete karta hai"
+      },
+      {
+        "en": "It blocks all outgoing HTTP network requests to conserve bandwidth",
+        "hi": "Ye bandwidth bachane ke liye network requests block karta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Without Conditional Rendering Patterns, applications suffer from brittle code, maintenance overhead, and unhandled edge cases that manifest as production crashes.",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) ke bina code brittle ho jata hai aur production mein unexpected errors aate hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When reasoning about Conditional Rendering Patterns, how is its mental model best conceptualized through real-world analogies?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) ko real-world analogies ke zariye kaise best samjha ja sakta hai?"
+    },
+    "options": [
+      {
+        "en": "As a completely offline computer with zero network or database connections",
+        "hi": "Ek offline computer ki tarah jisme koi connection na ho"
+      },
+      {
+        "en": "As a disciplined, coordinated workflow where inputs are validated and processed through standardized checkpoints rather than ad-hoc handling",
+        "hi": "Ek disciplined workflow ki tarah jahan data ko structured checkpoints ke zariye step-by-step process kiya jata hai"
+      },
+      {
+        "en": "As a random number generator with non-deterministic output",
+        "hi": "Random number generator ki tarah jiska koi niyam na ho"
+      },
+      {
+        "en": "As a static text document that cannot be modified or read",
+        "hi": "Static text document jo padha na ja sake"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Real-world workflow analogies help engineers visualize component boundaries, request lifecycles, and data transformations intuitively.",
+      "hi": "Real-world analogies component boundaries aur request lifecycle ko visual aur intuitive banati hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When declaring and implementing Conditional Rendering Patterns, what syntactic convention is essential to prevent runtime errors?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) ko declare aur implement karte waqt kaunsa syntax niyam runtime errors rokne ke liye zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Adhering strictly to required parameters, handling asynchronous promises/callbacks cleanly, and verifying return value types",
+        "hi": "Zaroori parameters sahi pass karna, async promises ko handle karna aur return value types verify karna"
+      },
+      {
+        "en": "Wrapping every line of code inside an eval() execution block",
+        "hi": "Har line ko eval() block mein wrap karna"
+      },
+      {
+        "en": "Omitting import and require statements to reduce file size",
+        "hi": "File size ghatane ke liye import statements hatana"
+      },
+      {
+        "en": "Writing all code on a single continuous line without whitespace",
+        "hi": "Bina whitespace ke single line par code likhna"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Following standard ES6+ syntax contracts and properly handling promise resolution ensures execution safety and eliminates TypeError exceptions.",
+      "hi": "ES6+ syntax aur promise handling ke standard rules follow karne se TypeError aur crashes nahi aate."
+    }
+  },
+  {
+    "question": {
+      "en": "What is a common pitfall developers encounter when working with Conditional Rendering Patterns?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) ke saath kaam karte waqt developers aksar kaunsi aam galati karte hain?"
+    },
+    "options": [
+      {
+        "en": "Writing unit tests before implementing features",
+        "hi": "Feature likhne se pehle unit tests likhna"
+      },
+      {
+        "en": "Failing to handle failure edge cases, mutating shared state directly, or neglecting defensive validation guard clauses",
+        "hi": "Failure edge cases ko handle na karna, shared state direct mutate karna ya validation guard clauses na lagana"
+      },
+      {
+        "en": "Using strict equality checks (===) instead of loose equality (==)",
+        "hi": "Loose equality ke badle strict equality use karna"
+      },
+      {
+        "en": "Writing clear inline code documentation",
+        "hi": "Clear inline code comments likhna"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Neglecting edge cases and error handling causes silent regressions and race conditions that surface under concurrent user workloads.",
+      "hi": "Edge cases aur error handling miss karne se high-traffic production load mein silent bugs paida hote hain."
+    }
+  },
+  {
+    "question": {
+      "en": "According to production best practices, how should Conditional Rendering Patterns be architected for enterprise-grade stability?",
+      "hi": "Production best practices ke mutabiq enterprise-grade stability ke liye Conditional Rendering Patterns (&&, Ternary, Early Return) ko kaise architect karna chahiye?"
+    },
+    "options": [
+      {
+        "en": "Enforce modular boundaries, validate all incoming payloads against schemas, log structured context, and maintain pure functions where possible",
+        "hi": "Modular boundaries enforce karein, payloads ko schema se validate karein, structured logs rakhein aur pure functions use karein"
+      },
+      {
+        "en": "Hardcode sensitive database connection strings directly in client-side files",
+        "hi": "Database passwords ko client files mein hardcode karna"
+      },
+      {
+        "en": "Disable all linter rules and type warnings globally",
+        "hi": "Linter aur type warnings ko globally disable karna"
+      },
+      {
+        "en": "Store all user session variables in global un-scoped memory arrays",
+        "hi": "Global memory arrays mein sessions store karna"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Enterprise-grade code prioritizes modularity, strict input validation, structured observability, and stateless designs.",
+      "hi": "Production hardening ke liye modular code, schema validation aur observability standard rules hote hain."
+    }
+  },
+  {
+    "question": {
+      "en": "How does proper optimization of Conditional Rendering Patterns impact application memory and CPU consumption?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) ko sahi dhang se optimize karne par application memory aur CPU par kya asar padta hai?"
+    },
+    "options": [
+      {
+        "en": "It increases server CPU temperature to 100 degrees Celsius",
+        "hi": "Server CPU temperature 100 degrees kar deta hai"
+      },
+      {
+        "en": "It minimizes redundant computations, eliminates memory leaks from uncleaned references, and maintains low latency under high concurrency",
+        "hi": "Ye redundant computations ghatata hai, memory leaks khatam karta hai aur high concurrency mein low latency maintain karta hai"
+      },
+      {
+        "en": "It doubles heap RAM allocation unconditionally",
+        "hi": "Heap RAM ko zabardasti double karta hai"
+      },
+      {
+        "en": "Optimization has zero measurable impact in modern web engines",
+        "hi": "Modern web engines par optimization ka koi asar nahi hota"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Preventing unnecessary allocations and cleaning up resources ensures low garbage collection pressure and predictable response times.",
+      "hi": "Memory leak rokne aur unnecessary allocations hatane se Garbage Collector par load kam rehta hai aur response fast rehta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What security principle is non-negotiable when handling data within Conditional Rendering Patterns?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) mein data handle karte waqt kaunsa security principle non-negotiable hota hai?"
+    },
+    "options": [
+      {
+        "en": "Never trust client-supplied input: always sanitize, authenticate, authorize, and validate against strict schemas on the server",
+        "hi": "Client data par blind trust na karein: server par hamesha sanitize, authenticate, authorize aur validate karein"
+      },
+      {
+        "en": "Trust all requests coming from mobile devices or web browsers blindly",
+        "hi": "Mobile ya browser se aane wali requests par blind trust karein"
+      },
+      {
+        "en": "Disable HTTPS and SSL certificates to maximize raw network throughput",
+        "hi": "Network throughput ke liye HTTPS band karein"
+      },
+      {
+        "en": "Expose database admin credentials to all registered users",
+        "hi": "Database admin credentials sabhi users ko expose karein"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Zero-Trust security dictates that every incoming request and data mutation must be validated and authenticated server-side before processing.",
+      "hi": "Zero-Trust security ke mutabiq har incoming mutation ko server par strictly validate aur authenticate kiya jana chahiye."
+    }
+  },
+  {
+    "question": {
+      "en": "How does asynchronous non-blocking execution operate in Conditional Rendering Patterns?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) mein asynchronous non-blocking execution kaise kaam karta hai?"
+    },
+    "options": [
+      {
+        "en": "It freezes the entire operating system until each operation completes",
+        "hi": "Har operation complete hone tak operating system freeze rehta hai"
+      },
+      {
+        "en": "I/O operations return Promises or accept callbacks, delegating work to background threads/queues while the main thread remains free to handle incoming tasks",
+        "hi": "I/O operations Promises return karte hain aur background queues use karke main thread ko baaki requests ke liye free rakhte hain"
+      },
+      {
+        "en": "Async operations execute in reverse alphabetical order automatically",
+        "hi": "Async operations reverse alphabetical order mein chalte hain"
+      },
+      {
+        "en": "Async code only executes when triggered manually by a user click",
+        "hi": "Sirf manual user click par async code chalta hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Non-blocking asynchronous operations resolve via microtasks or event loop queues, ensuring the runtime thread serves concurrent requests smoothly.",
+      "hi": "Non-blocking model main thread ko free rakhta hai taaki server bina rukaawat ke multiple users ko simultaneously serve kar sake."
+    }
+  },
+  {
+    "question": {
+      "en": "What is the recommended pattern for propagating errors that occur in Conditional Rendering Patterns?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) mein error aane par unhe propagate karne ka recommended pattern kya hai?"
+    },
+    "options": [
+      {
+        "en": "Intercepting the error, enriching it with operational context, and delegating to a centralized error handler or error boundary",
+        "hi": "Error ko intercept karna, debug context add karna, aur centralized error handler ya error boundary ko pass karna"
+      },
+      {
+        "en": "Swallowing errors silently with empty catch {} blocks to hide problems from logs",
+        "hi": "Khaali catch {} blocks se errors ko silently daba dena taaki logs mein na dikhein"
+      },
+      {
+        "en": "Shutting down the server machine power immediately",
+        "hi": "Server machine power turant band kar dena"
+      },
+      {
+        "en": "Sending internal raw stack traces and database credentials to end-user browsers",
+        "hi": "Raw stack trace aur DB passwords browser par bhej dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Centralized error propagation provides complete operational observability while shielding internal infrastructure details from end users.",
+      "hi": "Centralized error handling se system mein transparency rehti hai aur user ko clean, safe error messages milte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "When authoring unit or integration tests for Conditional Rendering Patterns, what must the test suite assert?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) ke liye automated tests likhte waqt test suite ko kya assert karna zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Only that the JavaScript file can be saved to disk",
+        "hi": "Sirf ye ki file disk par save ho sake"
+      },
+      {
+        "en": "Both the happy path (expected inputs producing valid outputs) AND boundary edge cases (null, empty arrays, network timeouts, invalid types)",
+        "hi": "Happy path (valid data) AUR boundary edge cases (null, empty array, network timeout, invalid types) dono ko verify karna"
+      },
+      {
+        "en": "That the test suite takes at least 24 hours to finish running",
+        "hi": "Test suite ko 24 ghante chalna chahiye"
+      },
+      {
+        "en": "Testing is considered unnecessary in modern full-stack development",
+        "hi": "Modern development mein testing zaroori nahi hai"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Robust automated test suites verify both standard valid scenarios and defensive failure modes to prevent regressions during deployments.",
+      "hi": "Achhi testing valid inputs aur failure states dono ko assert karti hai taaki production deployments safe rahein."
+    }
+  },
+  {
+    "question": {
+      "en": "How does modular design enhance code maintainability in Conditional Rendering Patterns?",
+      "hi": "Modular design Conditional Rendering Patterns (&&, Ternary, Early Return) mein code maintainability ko kaise badhata hai?"
+    },
+    "options": [
+      {
+        "en": "By isolating distinct responsibilities into small, reusable, and independently testable units following the Single Responsibility Principle",
+        "hi": "Single Responsibility Principle ke zariye alag-alag kaamo ko chote, reusable aur testable units mein baant kar"
+      },
+      {
+        "en": "By combining all frontend, backend, and database code into a single 50,000-line script",
+        "hi": "Saara code ek hi 50,000-line script mein daal kar"
+      },
+      {
+        "en": "By removing all function names and replacing them with random numbers",
+        "hi": "Function names hata kar random numbers likhna"
+      },
+      {
+        "en": "By forbidding code comments and documentation across the repository",
+        "hi": "Comments aur documentation ban kar dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Modularity reduces cognitive load, simplifies debugging, prevents ripple effects during changes, and enables seamless team collaboration.",
+      "hi": "Modular code se readability badhti hai, debugging aasan hoti hai aur ek jagah badlav karne par doosri jagah bugs nahi aate."
+    }
+  },
+  {
+    "question": {
+      "en": "When application traffic scales 100x, how should Conditional Rendering Patterns be architected to support horizontal scaling?",
+      "hi": "Traffic 100x badhne par Conditional Rendering Patterns (&&, Ternary, Early Return) ko horizontally scale karne ke liye kya design approach honi chahiye?"
+    },
+    "options": [
+      {
+        "en": "Ensure the component/service is completely stateless, offload shared session/state to Redis/MongoDB, and distribute traffic via a load balancer",
+        "hi": "Service ko completely stateless banayein, shared state ko Redis/DB par shift karein aur load balancer se traffic distribute karein"
+      },
+      {
+        "en": "Store all user session variables in local in-memory JavaScript objects on the web server",
+        "hi": "Server ki local RAM mein session variables store karna"
+      },
+      {
+        "en": "Reboot the production server manually whenever memory usage exceeds 10%",
+        "hi": "Memory 10% cross hote hi server manually reboot karna"
+      },
+      {
+        "en": "Block 95% of incoming users using firewall rules",
+        "hi": "95% users ko firewall se block kar dena"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Stateless service architecture guarantees that any container instance can handle any incoming request, enabling dynamic auto-scaling without session loss.",
+      "hi": "Stateless architecture auto-scaling ka base hai jahan naye containers bina session loss ke instant traffic handle kar sakte hain."
+    }
+  },
+  {
+    "question": {
+      "en": "In the full-stack MERN paradigm, where does Conditional Rendering Patterns properly belong and execute?",
+      "hi": "Full-stack MERN architecture mein Conditional Rendering Patterns (&&, Ternary, Early Return) kahan belong karta hai aur kahan execute hota hai?"
+    },
+    "options": [
+      {
+        "en": "In its designated architectural tier (Client browser UI, Express API backend, or MongoDB database) with clean API contracts connecting them",
+        "hi": "Apne designated tier (Browser UI, Express API backend, ya MongoDB) mein clean API contracts ke saath"
+      },
+      {
+        "en": "Directly on the end-user's local router firmware",
+        "hi": "User ke local router firmware par"
+      },
+      {
+        "en": "Inside the computer motherboard BIOS chip",
+        "hi": "Motherboard BIOS chip mein"
+      },
+      {
+        "en": "All MERN code runs strictly inside the MongoDB database engine",
+        "hi": "Saara MERN code sirf MongoDB ke andar chalta hai"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Maintaining clear structural boundaries between client rendering, backend orchestration, and database persistence is the defining trait of MERN.",
+      "hi": "Client UI, backend server aur database ke beech saaf boundary maintain karna MERN architecture ka mukhya niyam hai."
+    }
+  },
+  {
+    "question": {
+      "en": "What telemetry metric or observability signal is most crucial for diagnosing issues with Conditional Rendering Patterns in production?",
+      "hi": "Production mein Conditional Rendering Patterns (&&, Ternary, Early Return) ki problems diagnose karne ke liye sabse zaroori telemetry metric kaunsi hoti hai?"
+    },
+    "options": [
+      {
+        "en": "The desktop monitor brightness setting of the client",
+        "hi": "Client ke monitor ki brightness"
+      },
+      {
+        "en": "Latency percentiles (p95/p99), error rates (HTTP 4xx/5xx), throughput (RPS), and heap memory allocation deltas",
+        "hi": "Latency percentiles (p95/p99), error rates (4xx/5xx), throughput (RPS), aur heap memory allocation deltas"
+      },
+      {
+        "en": "The number of files in the project's root folder",
+        "hi": "Root folder mein files ki sankhya"
+      },
+      {
+        "en": "The physical keyboard model used by the engineer",
+        "hi": "Engineer ke keyboard ka model"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Observability platforms monitor p95/p99 latencies, error frequencies, and memory utilization to identify bottlenecks and regressions early.",
+      "hi": "p95/p99 latencies aur error rates monitor karne se crashes aane se pehle hi bottlenecks pakad mein aa jaate hain."
+    }
+  },
+  {
+    "question": {
+      "en": "Why is eliminating unintended side effects essential when authoring logic for Conditional Rendering Patterns?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) ka logic likhte waqt unintended side effects ko khatam karna kyun zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "Side effects introduce unpredictability, corrupt shared state, cause race conditions, and make concurrent code nearly impossible to debug",
+        "hi": "Side effects se code unpredictable banta hai, shared state corrupt hoti hai aur race conditions create hoti hain"
+      },
+      {
+        "en": "Side effects permanently erase the developer's Git commit history",
+        "hi": "Git history permanently delete ho jaati hai"
+      },
+      {
+        "en": "Side effects are strictly required by the JavaScript ECMAScript standard",
+        "hi": "ECMAScript mein side effects required hain"
+      },
+      {
+        "en": "Side effects make all algorithms execute in O(1) time",
+        "hi": "Saare algorithms O(1) time mein chalte hain"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Pure and predictable logic produces the same output for identical inputs, guaranteeing thread safety, easy caching, and high reliability.",
+      "hi": "Pure logic se shared state safe rehti hai aur same input par hamesha consistent aur predictable output milta hai."
+    }
+  },
+  {
+    "question": {
+      "en": "How should client-side state be kept in sync with backend server mutations in Conditional Rendering Patterns?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) mein client-side state aur backend server data ko sync mein kaise rakha jata hai?"
+    },
+    "options": [
+      {
+        "en": "By forcing a complete hard page refresh every 3 seconds",
+        "hi": "Har 3 second mein poora page hard refresh karke"
+      },
+      {
+        "en": "Using optimistic UI updates with error rollback, automated query cache invalidation (TanStack Query/RTK), or WebSocket change streams",
+        "hi": "Optimistic UI updates with rollback, automated query cache invalidation ya WebSocket push streams use karke"
+      },
+      {
+        "en": "By disabling all database update operations permanently",
+        "hi": "Database updates ko permanently band karke"
+      },
+      {
+        "en": "By saving user state in local CSV files on the server desktop",
+        "hi": "Server desktop par CSV files save karke"
+      }
+    ],
+    "correctAnswer": 1,
+    "explanation": {
+      "en": "Modern full-stack architectures synchronize state seamlessly using query cache invalidation, optimistic updates, and real-time socket events.",
+      "hi": "Modern apps cache invalidation aur optimistic UI use karti hain taaki UI bina screen reload ke instantly updated rahe."
+    }
+  },
+  {
+    "question": {
+      "en": "Why is thorough resource cleanup (clearing timers, closing sockets, aborting in-flight requests) critical in Conditional Rendering Patterns?",
+      "hi": "Conditional Rendering Patterns (&&, Ternary, Early Return) mein resource cleanup (timers clear karna, sockets band karna, network abort karna) kyun zaroori hai?"
+    },
+    "options": [
+      {
+        "en": "To prevent memory leaks where unreachable or orphaned objects remain retained in heap memory, causing gradual performance degradation and crashes",
+        "hi": "Memory leaks rokne ke liye taaki unneeded objects RAM mein jama na hon aur server crash na ho"
+      },
+      {
+        "en": "To delete the client's local disk partition",
+        "hi": "Client ka local disk partition delete karne ke liye"
+      },
+      {
+        "en": "Because JavaScript engines allow only 5 variables in RAM",
+        "hi": "JS engine sirf 5 variables allow karta hai"
+      },
+      {
+        "en": "Cleanup is unnecessary because garbage collection handles 100% of event listeners automatically",
+        "hi": "Cleanup ki zaroorat nahi hoti"
+      }
+    ],
+    "correctAnswer": 0,
+    "explanation": {
+      "en": "Unclosed connections and dangling event listeners create references that prevent garbage collection, leading to severe memory leaks over time.",
+      "hi": "Dangling listeners aur unclosed connections memory leaks banate hain jo V8 heap ko exhaust karke process crash kar dete hain."
+    }
+  }
+],
+};
